@@ -1,0 +1,7 @@
+sdk/node_modules/
+
+sdk/.elasticbeanstalk/*
+
+sdk/!.elasticbeanstalk/*.cfg.yml
+
+sdk/!.elasticbeanstalk/*.global.yml

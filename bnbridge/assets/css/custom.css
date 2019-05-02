@@ -1,0 +1,195 @@
+/* CONTENT
+1. Override Bootstrap START
+2. Custom START
+*/
+
+/* === 1. Override Bootstrap START === */
+html {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  -ms-overflow-style: scrollbar;
+  -webkit-tap-highlight-color: transparent;
+}
+html, body {
+  line-height: 1.45;
+  font-family: "Open Sans", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #141414;
+  font-size: 15px;
+}
+h2 {
+  color: #f5bc00;
+}
+h6 {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.8rem;
+  font-family: "Source Sans Pro", sans-serif;
+}
+p {
+  font-size: 0.8rem;
+}
+label {
+  font-family: "Source Sans Pro", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+  margin-bottom: .5rem;
+}
+.form-control {
+  font-size: 0.8rem;
+  padding: 0.8rem;
+  line-height: 1.5;
+  border-color: #e1e1e1;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  border-radius: 3px;
+  background-color: #fafafa;
+  -webkit-transition: all 0.2s ease-in-out;
+  -o-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
+  height: auto;
+}
+.form-control:focus {
+  background-color: #fff !important;
+  border-color: #f5bc00;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+.btn {
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.btn-primary {
+  color: #f5bc00;
+  background-color: white;
+  border-color: #f5bc00;
+  padding: 0.8rem 2.5rem;
+  font-family: "Source Sans Pro", sans-serif;
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.01em;
+  border-radius: 3px;
+  -webkit-transition: all 0.2s ease-in-out;
+  -o-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
+  line-height: 1.5;
+}
+.btn-primary.active, .btn-primary:hover, .btn-primary:active, .btn-primary:focus, .btn-primary:active:focus {
+  color: white;
+  background-color: #f5bc00;
+  border-color: #f5bc00;
+}
+.nav-item {
+  color: #000;
+}
+div#terms-of-service {
+  z-index: 10000;
+}
+/* === Override Bootstrap END === */
+/* === 2. Custom START === */
+section {
+  padding: 7.5rem 0;
+}
+.tab {
+  display: none;
+}
+div.activeSwap, div.activeIssue {
+  display: inline;
+}
+.has-error .form-control, .form-control.error {
+  background-color: #FFC0A4;
+  color: #EB5E28;
+  border-color: #EB5E28;
+}
+label.error:not(.form-control) {
+  color: #EB5E28;
+  font-weight: 300;
+  font-size: 0.8em;
+}
+.bold {
+  font-weight: 700;
+}
+.italic {
+  font-style: italic;
+}
+.underlined {
+  text-decoration: underline;
+}
+.tab-buttons {
+  text-align: center
+}
+.nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {
+  color: #495057;
+  background-color: #fff;
+  border-color: #fff #fff #f5bc00 #fff;
+  border-bottom-width: 2px;
+}
+.nav-tabs .nav-link:focus, .nav-tabs .nav-link:hover {
+  color: #495057;
+  border-color: #fff #fff #f5bc00 #fff;
+  border-bottom-width: 2px;
+}
+.text-cont-frame {
+  border: 1px solid #e1e1e1;
+  border-radius: 3px;
+  background-color: #fafafa;
+  padding: 1rem;
+}
+.terms-of-service-link {
+  color: #f5bc00;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* TAB SLIDER START */
+.tile {
+  width:80%;
+  margin:0 auto;
+}
+#tile-1 .tab-pane {
+  padding:15px;
+}
+#tile-1 .nav-tabs {
+  position:relative;
+  border:none!important;
+  background-color:#fff;
+/*   box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 1px 5px 0 rgba(0,0,0,0.12), 0 3px 1px -2px rgba(0,0,0,0.2); */
+  border-radius:6px;
+}
+#tile-1 .nav-tabs li {
+  margin:0px!important;
+}
+#tile-1 .nav-tabs li a {
+  position:relative;
+  margin-right:0px!important;
+  padding: 20px 40px!important;
+  font-size:16px;
+  border:none!important;
+  color:#333;
+}
+#tile-1 .nav-tabs a:hover {
+  background-color:#fff!important;
+  border:none;
+}
+#tile-1 .slider {
+  display:inline-block;
+  width:30px;
+  height:4px;
+  border-radius:3px;
+  background-color:#f5bc00;
+  position:absolute;
+  z-index:1200;
+  bottom:0;
+  transition:all .4s linear;
+}
+#tile-1 .nav-tabs .active {
+  background-color:transparent!important;
+  border:none!important;
+  color:#f5bc00!important;
+}
+/* TAB SLIDER END */
+/* === Custom END === */

@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>bnbridge | Swap tokens. Effortlessly.</title>
+
+  <!-- ****** META ****** -->
+  <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+  <meta name="viewport" content="width=device-width" />
+  <meta name="keywords" content="">
+  <meta name="description" content="">
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+  <!-- ****** FAVICON ****** -->
+  <link rel="apple-touch-icon" sizes="57x57" href="./assets/favicons/apple-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="./assets/favicons/apple-icon-60x60.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="./assets/favicons/apple-icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="./assets/favicons/apple-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="./assets/favicons/apple-icon-114x114.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="./assets/favicons/apple-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="./assets/favicons/apple-icon-144x144.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="./assets/favicons/apple-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/favicons/apple-icon-180x180.png">
+  <link rel="icon" type="image/png" sizes="192x192"  href="./assets/favicons/android-icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="./assets/favicons/favicon-96x96.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./assets/favicons/favicon-16x16.png">
+  <link rel="manifest" href="./assets/favicons/manifest.json">
+  <meta name="msapplication-TileColor" content="#ffffff">
+  <meta name="msapplication-TileImage" content="./assets/favicons/ms-icon-144x144.png">
+  <meta name="theme-color" content="#ffffff">
+
+  <!-- ****** CSS FILES ****** -->
+  <!-- Core CSS Files -->
+  <link href="assets/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- Font Files -->
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700,800" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,300,400,600,700,900" rel="stylesheet">
+
+  <!-- Custom -->
+  <link href="assets/css/custom.css?v20190426" rel="stylesheet" />
+</head>
+<body>
+
+
+  <!-- Modal -->
+  <div class="modal fade bd-example-modal-lg" id="terms-of-service" tabindex="-1" role="dialog" aria-labelledby="terms-of-service-Label" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="terms-of-service-Label">Terms of Service</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>
+            Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+          </p>
+          <p>
+            Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, "Lorem ipsum dolor sit amet..", comes from a line in section 1.10.32.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">bnbridge</a>
+  </nav>
+
+  <div class="container">
+    <section>
+      <div class="row">
+        <div class="col-sm-12 col-md-6 col-lg-4 offset-lg-1 align-self-center">
+          <h2>With bnbridge you can:</h2><br/>
+          <ul>
+            <li>
+              Swap ERC20 to BEP2 compatible tokens
+            </li>
+            <li>
+              Launch BEP2 assets
+            </li>
+          </ul>
+        </div>
+        <div class="col-sm-12 col-md-12 col-lg-6">
+          <div class="tile" id="tile-1">
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs nav-justified" role="tablist">
+              <div class="slider"></div>
+              <li class="nav-item">
+                <a class="nav-link active" id="swap-tab" data-toggle="tab" href="#swap" role="tab" aria-controls="swap" aria-selected="true"><h6>Swap</h6></a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" id="issue-tab" data-toggle="tab" href="#issue" role="tab" aria-controls="issue" aria-selected="false"><h6>Issue</h6></a>
+              </li>
+            </ul>
+            <!-- Tab panes -->
+            <div class="tab-content">
+              <div class="tab-pane fade show active" id="swap" role="tabpanel" aria-labelledby="swap-tab">
+                <br/>
+                <form id="Swap" class="page-form" action="" method="">
+                  <div id="tab-1-Swap" class="tab activeSwap">
+                    <div class="form-group">
+                      <label for="binance-chain-token">Binance Chain Token</label>
+                      <select class="form-control" id="binance-chain-token" name="binance-chain-token">
+                        <option disabled="" selected="">- Select Token -</option>
+                        <option value="MKR">Maker (MKR)</option>
+                        <option value="BAT">Basic Attention Token (BAT)</option>
+                        <option value="REP">Augur (REP)</option>
+                        <option value="OMG">OmiseGO (OMG)</option>
+                        <option value="HOT">Holo (HOT)</option>
+                        <option value="ZRX">0x (ZRX)</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="bnb-receive">BNB receive address</label>
+                      <input type="text" class="form-control" id="bnb-receive" name="bnb-receive" placeholder="eg: bnb1mmxvnhkyqrvd2dpskvsgl8lmft4tnrcs97apr3">
+                    </div>
+                    <div class="form-group">
+                      <label for="erc-from">ERC20 from address</label>
+                      <input type="text" class="form-control" id="erc-from" name="erc-from" placeholder="eg: 0x0dE0BCb0703ff8F1aEb8C892eDbE692683bD8030">
+                    </div>
+                    <div class="form-group">
+                      <label for="swap-amount">Amount</label>
+                      <input type="text" class="form-control" id="swap-amount" name="swap-amount" placeholder="eg: 100">
+                    </div>
+                    <p>
+                      By singing up here, you agree to bnbridge's <span class="terms-of-service-link" data-toggle="modal" data-target="#terms-of-service">Terms of Service</span>.
+                    </p>
+                    <div class="tab-buttons">
+                      <div class="btn btn-primary nav-button" data-nav="next">Next</div>
+                    </div>
+                  </div><!--/#tab-1-Swap-->
+                  <div id="tab-2-Swap" class="tab">
+                    <div class="text-cont-frame">
+                      <p class="text-center underlined">
+                        Here's what you need to do next:
+                      </p>
+                      <p class="text-center">
+                        Transfer
+                        <span id="swap-amount-text" class="bold italic">{amount}</span>
+                        <span id="binance-chain-token-text" class="bold italic">{symbol}</span>
+                      </p>
+                      <p class="text-center">
+                        from
+                      </p>
+                      <p class="text-center">
+                        <span id="erc-from-text" class="bold italic">{from address}</span>
+                      </p>
+                      <p class="text-center">
+                        to
+                      </p>
+                      <p class="text-center">
+                        <span id="bnb-receive-text" class="bold italic">{to address}</span>
+                      </p>
+                      <p class="text-center">
+                        After you've completed the transfer, <span class="underlined">click the "SWAP" button</span> so we can verify your transaction.
+                      </p>
+                    </div>
+                    <br/><br/>
+                    <div class="tab-buttons">
+                      <div class="btn btn-primary nav-button" data-nav="previous">Back</div>
+                      <div class="btn btn-primary nav-button" data-nav="next">Swap</div>
+                    </div>
+                  </div><!--/#tab-2-Swap-->
+                  <div id="tab-3-Swap" class="tab">
+                    <div class="text-cont-frame">
+                      <p class="text-center">
+                        <span class="bold">Awesome!</span>
+                      </p>
+                      <p class="text-center">
+                        Your transaction was successfull.
+                      </p>
+
+                    </div>
+                    <br/><br/>
+                    <div class="tab-buttons">
+                      <!-- <div class="btn btn-primary nav-button" data-nav="previous">Back</div> -->
+                      <div class="btn btn-primary nav-button" data-nav="done">Done</div>
+                    </div>
+                  </div><!--/#tab-3-Swap-->
+                </form>
+              </div> <!--/#swap-->
+              <div class="tab-pane fade" id="issue" role="tabpanel" aria-labelledby="issue-tab">
+
+                <br/>
+                <form id="Issue" class="page-form" action="" method="">
+                    <div id="tab-1-Issue" class="tab activeIssue">
+                      <div class="form-group">
+                        <label for="erc-contact">ERC20 Contract address</label>
+                        <input type="text" class="form-control" id="erc-contact" name="erc-contact" placeholder="eg: 0x0dE0BCb0703ff8F1aEb8C892eDbE692683bD8030">
+                      </div>
+                      <div class="form-group">
+                        <label for="token-name">Token Name</label>
+                        <input type="text" class="form-control" id="token-name" name="token-name" placeholder="eg: Binance Coin">
+                      </div>
+                      <div class="form-group">
+                        <label for="symbol">Symbol</label>
+                        <input type="text" class="form-control" id="symbol" name="symbol" placeholder="eg: BNB">
+                      </div>
+                      <div class="form-group">
+                        <label for="total-supply">Total Supply</label>
+                        <input type="text" class="form-control" id="total-supply" name="total-supply" placeholder="eg: 100000000000000000">
+                      </div>
+                      <p>
+                        By singing up here, you agree to bnbridge's <span class="terms-of-service-link" data-toggle="modal" data-target="#terms-of-service">Terms of Service</span>.
+                      </p>
+                      <div class="tab-buttons">
+                        <div class="btn btn-primary nav-button" data-nav="next">Next</div>
+                      </div>
+                    </div><!--/#tab-1-Issue-->
+                    <div id="tab-2-Issue" class="tab">
+                      <div class="text-cont-frame">
+                        <p class="text-center underlined">
+                          Here's what you need to do next:
+                        </p>
+                        <p class="text-center">
+                          <span id="erc-contact-text" class="bold italic">{erc-contact}</span>
+                          <span id="token-name-text" class="bold italic">{token-name}</span>
+                          <span id="symbol-text" class="bold italic">{symbol}</span>
+                          <span id="total-supply-text" class="bold italic">{total-supply}</span>
+                        </p>
+                        <p class="text-center">
+                          <span class="underlined">Click the "ISSUE" button</span>.
+                        </p>
+                      </div>
+                      <br/><br/>
+                      <div class="tab-buttons">
+                        <div class="btn btn-primary nav-button" data-nav="previous">Back</div>
+                        <div class="btn btn-primary nav-button" data-nav="next">Issue</div>
+                      </div>
+                    </div><!--/#tab-2-Issue-->
+                    <div id="tab-3-Issue" class="tab">
+                      <div class="text-cont-frame">
+                        <p class="text-center">
+                          <span class="bold">Awesome!</span>
+                        </p>
+                        <p class="text-center">
+                          Your transaction was successfull.
+                        </p>
+
+                      </div>
+                      <br/><br/>
+                      <div class="tab-buttons">
+                        <!-- <div class="btn btn-primary nav-button" data-nav="previous">Back</div> -->
+                        <div class="btn btn-primary nav-button" data-nav="done">Done</div>
+                      </div>
+                    </div><!--/#tab-3-Issue-->
+                  </form>
+
+
+
+
+
+              </div><!--/#issue-->
+            </div><!--/.tab-content-->
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+
+<!-- Core JS Files -->
+<script src="assets/js/jquery-2.2.4.min.js" type="text/javascript"></script>
+<script src="assets/js/bootstrap.min.js" type="text/javascript"></script>
+
+<!-- More information about jquery.validate here: https://jqueryvalidation.org/	 -->
+<script src="assets/js/jquery.validate.min.js" type="text/javascript"></script>
+
+<!-- Custom -->
+<script src="assets/js/custom.js?v20190426" type="text/javascript"></script>
+
+</html>
