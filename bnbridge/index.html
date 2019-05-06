@@ -39,7 +39,7 @@
   <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,300,400,600,700,900" rel="stylesheet">
 
   <!-- Custom -->
-  <link href="assets/css/custom.css?v20190426" rel="stylesheet" />
+  <link href="assets/css/custom.css?" rel="stylesheet" />
 </head>
 <body>
 
@@ -106,32 +106,29 @@
                 <form id="Swap" class="page-form" action="" method="">
                   <div id="tab-1-Swap" class="tab activeSwap">
                     <div class="form-group">
-                      <label for="binance-chain-token">Binance Chain Token</label>
-                      <select class="form-control" id="binance-chain-token" name="binance-chain-token">
+                      <label for="binance_chain_token">Binance Chain Token</label>
+                      <select class="form-control" id="binance_chain_token" name="binance_chain_token">
                         <option disabled="" selected="">- Select Token -</option>
-                        <option value="MKR">Maker (MKR)</option>
-                        <option value="BAT">Basic Attention Token (BAT)</option>
-                        <option value="REP">Augur (REP)</option>
-                        <option value="OMG">OmiseGO (OMG)</option>
-                        <option value="HOT">Holo (HOT)</option>
-                        <option value="ZRX">0x (ZRX)</option>
                       </select>
                     </div>
                     <div class="form-group">
-                      <label for="bnb-receive">BNB receive address</label>
-                      <input type="text" class="form-control" id="bnb-receive" name="bnb-receive" placeholder="eg: bnb1mmxvnhkyqrvd2dpskvsgl8lmft4tnrcs97apr3">
+                      <label for="bnb_receive">BNB receive address</label>
+                      <input type="text" class="form-control" id="bnb_receive" name="bnb_receive" placeholder="eg: bnb1mmxvnhkyqrvd2dpskvsgl8lmft4tnrcs97apr3">
                     </div>
                     <div class="form-group">
-                      <label for="erc-from">ERC20 from address</label>
-                      <input type="text" class="form-control" id="erc-from" name="erc-from" placeholder="eg: 0x0dE0BCb0703ff8F1aEb8C892eDbE692683bD8030">
+                      <label for="erc_from">ERC20 from address</label>
+                      <input type="text" class="form-control" id="erc_from" name="erc_from" placeholder="eg: 0x0dE0BCb0703ff8F1aEb8C892eDbE692683bD8030">
                     </div>
                     <div class="form-group">
-                      <label for="swap-amount">Amount</label>
-                      <input type="text" class="form-control" id="swap-amount" name="swap-amount" placeholder="eg: 100">
+                      <label for="swap_amount">Amount</label>
+                      <input type="text" class="form-control" id="swap_amount" name="swap_amount" placeholder="eg: 100">
                     </div>
                     <p>
                       By singing up here, you agree to bnbridge's <span class="terms-of-service-link" data-toggle="modal" data-target="#terms-of-service">Terms of Service</span>.
                     </p>
+                    <div class="form-group">
+                      <input hidden=true type="text" class="form-control" id="swap_uuid" name="swap_uuid" placeholder="uuid">
+                    </div>
                     <div class="tab-buttons">
                       <div class="btn btn-primary nav-button" data-nav="next">Next</div>
                     </div>
@@ -143,20 +140,20 @@
                       </p>
                       <p class="text-center">
                         Transfer
-                        <span id="swap-amount-text" class="bold italic">{amount}</span>
-                        <span id="binance-chain-token-text" class="bold italic">{symbol}</span>
+                        <span id="swap_amount_text" class="bold italic">{amount}</span>
+                        <span id="swap_token_symbol_text" class="bold italic">{symbol}</span>
                       </p>
                       <p class="text-center">
                         from
                       </p>
                       <p class="text-center">
-                        <span id="erc-from-text" class="bold italic">{from address}</span>
+                        <span id="swap_token_from_text" class="bold italic">{from address}</span>
                       </p>
                       <p class="text-center">
                         to
                       </p>
                       <p class="text-center">
-                        <span id="bnb-receive-text" class="bold italic">{to address}</span>
+                        <span id="swap_token_to_text" class="bold italic">{to address}</span>
                       </p>
                       <p class="text-center">
                         After you've completed the transfer, <span class="underlined">click the "SWAP" button</span> so we can verify your transaction.
@@ -192,20 +189,23 @@
                 <form id="Issue" class="page-form" action="" method="">
                     <div id="tab-1-Issue" class="tab activeIssue">
                       <div class="form-group">
-                        <label for="erc-contact">ERC20 Contract address</label>
-                        <input type="text" class="form-control" id="erc-contact" name="erc-contact" placeholder="eg: 0x0dE0BCb0703ff8F1aEb8C892eDbE692683bD8030">
+                        <label for="erc20_address">ERC20 Contract address</label>
+                        <input type="text" class="form-control" id="erc20_address" name="erc20_address" placeholder="eg: 0x0dE0BCb0703ff8F1aEb8C892eDbE692683bD8030">
                       </div>
                       <div class="form-group">
-                        <label for="token-name">Token Name</label>
-                        <input type="text" class="form-control" id="token-name" name="token-name" placeholder="eg: Binance Coin">
+                        <label for="name">Token Name</label>
+                        <input type="text" class="form-control" id="name" name="name" placeholder="eg: Binance Coin">
                       </div>
                       <div class="form-group">
                         <label for="symbol">Symbol</label>
                         <input type="text" class="form-control" id="symbol" name="symbol" placeholder="eg: BNB">
                       </div>
                       <div class="form-group">
-                        <label for="total-supply">Total Supply</label>
-                        <input type="text" class="form-control" id="total-supply" name="total-supply" placeholder="eg: 100000000000000000">
+                        <label for="total_supply">Total Supply</label>
+                        <input type="text" class="form-control" id="total_supply" name="total_supply" placeholder="eg: 100000000000000000">
+                      </div>
+                      <div class="form-group">
+                        <input hidden=true type="text" class="form-control" id="uuid" name="uuid" placeholder="uuid">
                       </div>
                       <p>
                         By singing up here, you agree to bnbridge's <span class="terms-of-service-link" data-toggle="modal" data-target="#terms-of-service">Terms of Service</span>.
@@ -220,13 +220,18 @@
                           Here's what you need to do next:
                         </p>
                         <p class="text-center">
-                          <span id="erc-contact-text" class="bold italic">{erc-contact}</span>
-                          <span id="token-name-text" class="bold italic">{token-name}</span>
-                          <span id="symbol-text" class="bold italic">{symbol}</span>
-                          <span id="total-supply-text" class="bold italic">{total-supply}</span>
+                          Transfer
+                          <span id="issue_amount" class="bold italic"></span>
+                          <span id="binance_chain_token-text" class="bold italic">BNB</span>
                         </p>
                         <p class="text-center">
-                          <span class="underlined">Click the "ISSUE" button</span>.
+                          to
+                        </p>
+                        <p class="text-center">
+                          <span id="account" class="bold italic">placeholder</span>
+                        </p>
+                        <p class="text-center">
+                          After you've completed the transfer, <span class="underlined">click the "ISSUE" button</span> so we can verify your transaction.
                         </p>
                       </div>
                       <br/><br/>
@@ -243,12 +248,11 @@
                         <p class="text-center">
                           Your transaction was successfull.
                         </p>
-
                       </div>
                       <br/><br/>
                       <div class="tab-buttons">
                         <!-- <div class="btn btn-primary nav-button" data-nav="previous">Back</div> -->
-                        <div class="btn btn-primary nav-button" data-nav="done">Done</div>
+                        <div class="btn btn-primary nav-button" data-nav="done" id="issue-done">Done</div>
                       </div>
                     </div><!--/#tab-3-Issue-->
                   </form>

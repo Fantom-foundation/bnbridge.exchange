@@ -11,9 +11,12 @@ router.get('/', function (req, res, next) {
 
 
 router.post('/api/v1/tokens', bodyParser.json(), models.createToken)
-router.post('/api/v1/tokens/:uuid/finalize', bodyParser.json(), models.finalizeToken)
+router.post('/api/v1/finalizeToken', bodyParser.json(), models.finalizeToken)
 router.get('/api/v1/tokens', bodyParser.json(), models.getTokens)
 router.get('/api/v1/tokens/:uuid', bodyParser.json(), models.getToken)
+
+router.post('/api/v1/swap', bodyParser.json(), models.swapToken)
+router.post('/api/v1/finalizeSwap', bodyParser.json(), models.finalizeSwap)
 
 router.get('/api/v1/fees', bodyParser.json(), models.getFees)
 

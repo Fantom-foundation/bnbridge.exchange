@@ -5,7 +5,7 @@ var shell = os.platform() === 'win32' ? 'powershell.exe' : 'bash';
 
 var ptyProcess = pty.spawn(shell, [], {
   name: 'xterm-color',
-  cols: 80,
+  cols: 800,
   rows: 30,
   cwd: process.env.HOME,
   env: process.env
@@ -31,6 +31,16 @@ ptyProcess.on('data', function(data) {
 
   if(data.includes("**Important**")) {
     process.stdout.write(data);
+
+    const tmpData = data.replace(/\s\s+/g, ' ').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '').split(' ');
+    const publicKey = tmpData[6]
+    const privateKey = tmpData[7]
+    const seedPhrase = tmpData.slice(33, 57).join(' ')
+    console.log(publicKey)
+    console.log(privateKey)
+    console.log(seedPhrase)
+
+    ptyProcess.write('exit\r');
   }
 
   if(data.includes("override the existing name")) {
