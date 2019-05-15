@@ -590,13 +590,13 @@ const models = {
                   })
                 })
               } else {
-                res.status(500)
+                res.status(400)
                 res.body = { 'status': 400, 'success': false, 'result': 'Unable to find the transaction' }
                 return next(null, req, res, next)
               }
             })
           } else {
-            res.status(500)
+            res.status(400)
             res.body = { 'status': 400, 'success': false, 'result': 'Unable to find the transaction' }
             return next(null, req, res, next)
           }

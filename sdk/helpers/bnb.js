@@ -198,6 +198,19 @@ const bnb = {
   getBalance(address, callback) {
     const bnbClient = new BnbApiClient(config.api);
     bnbClient.getBalance(address).then((balances) => { callback(null, balances ) });
+  },
+
+  list(symbol, keyName, initPrice, proposalId) {
+    const ptyProcess = bnb.spawnProcess()
+
+    ptyProcess.on('data', function(data) {
+      // process.stdout.write(data);
+      callback(null, data)
+      ptyProcess.write('exit\r');
+    });
+
+    ptyProcess.write('cd '+config.filePath+'\r');
+    ptyProcess.write('./'+config.fileName+' dex list -s '+symbol+' --quote-asset-symbol BNB --from '+keyName+' --init-price '+initPrice+' --proposal-id '+proposalId+' --chain-id='+config.chainID+' --node='+config.nodeData+' --trust-node --json\r');
   }
 }
 
