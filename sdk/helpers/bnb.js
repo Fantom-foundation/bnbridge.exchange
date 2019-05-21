@@ -75,8 +75,9 @@ const bnb = {
       }
 
       if(data.includes("override the existing name")) {
-        ptyProcess.write('y\r');
-        // callback('Key already exists')
+        ptyProcess.write('n\r');
+        ptyProcess.write('exit\r');
+        callback('Symbol already exists')
       }
     });
 
