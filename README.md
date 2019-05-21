@@ -3,7 +3,7 @@
 ### Features:
 - [x] Issue a new token on the Binance network.
 - [x] Swap a token from ERC20 to BEP2.
-- [ ] List newly issued token on Binance DEX.
+- [x] List newly issued token on Binance DEX.
 
 ### Repository
 ## ./bnbridge
@@ -19,10 +19,11 @@ API used to interact with the CLI utility, Binance javascript SDK and Web3.js to
 ### Installation
     git clone the repo
 
-    cd sdk
+    cd ./sdk
+
     npm install
     run ./sql/setup.sql to instantiate the DB.
-    update config/index.js with
+    update ./config/index.js with
         - databse connection details.
         - Binance cli path.
         - Binance connection details for mainnet/testnet.
@@ -31,5 +32,8 @@ API used to interact with the CLI utility, Binance javascript SDK and Web3.js to
     or
     pm2 start api.bnbridge.exchange.js
 
-    vi bnbridge/assets/js/custom.js
-    Modify const apiURL to URL that the bnbridge.excahnge API is running at. (http://localhost:8000 by default)
+    cd ../bnbridge
+
+    npm install
+    vi ./src/config.js
+    Modify config urls that the bnbridge.excahnge API is running at. (http://localhost:8000 by default)

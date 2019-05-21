@@ -1,19 +1,20 @@
 const config = {
   host: "localhost",
-  database: "bnbridge_live", //live
+  database: "bnbridge",
   user: "postgres",
   password: "123123123",
 
   //Binance
-  api: "https://dex.binance.org/", //live
-  filePath: "c:/opt/fantom/fantom-binance/cli/node-binary/cli/prod/0.5.8.1/windows/", //live
-  fileName: "bnbcli.exe", //live
-  chainID: "Binance-Chain-Tigris", //live
-  nodeData: "https://dataseed5.defibit.io:443", //live
-  nodeHTTPS: "https://dataseed5.defibit.io:443", //live
+  api: "https://testnet-dex.binance.org/",
+  filePath: "c:/opt/fantom/fantom-binance/cli/node-binary/cli/testnet/0.5.8.1/windows/",
+  fileName: "tbnbcli.exe",
+  chainID: "Binance-Chain-Nile",
+  nodeData: "data-seed-pre-2-s1.binance.org:80",
+  nodeHTTPS: "https://seed-pre-s3.binance.org:443",
 
   //Ethereum
-  provider: 'https://mainnet.infura.io/v3/2b1dbb61817f4ae6ac90d9b41662993b', //live
+  provider: 'https://ropsten.infura.io/v3/2b1dbb61817f4ae6ac90d9b41662993b',
+
 
   erc20ABI: [
   	{
