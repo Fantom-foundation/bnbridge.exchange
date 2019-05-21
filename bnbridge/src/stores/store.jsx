@@ -14,10 +14,14 @@ import {
   TOKEN_SWAPPED,
   FINALIZE_SWAP_TOKEN,
   TOKEN_SWAP_FINALIZED,
+  SUBMIT_LIST_PROPOSAL,
+  LIST_PROPOSAL_SUBMITTED,
+  FINALIZE_LIST_PROPOSAL,
+  LIST_PROPOSAL_FINALIZED,
   LIST_TOKEN,
   TOKEN_LISTED,
-  FINALIZE_LIST_TOKEN,
-  TOKEN_LIST_FINALIZED
+  GET_LIST_PROPOSAL,
+  LIST_PROPOSAL_UPDATED,
 } from '../constants'
 
 let Dispatcher = require('flux').Dispatcher;
@@ -60,8 +64,14 @@ class Store {
           case LIST_TOKEN:
             this.listToken(payload);
             break;
-          case FINALIZE_LIST_TOKEN:
-            this.finalizeListToken(payload);
+          case SUBMIT_LIST_PROPOSAL:
+            this.submitListProposal(payload);
+            break;
+          case FINALIZE_LIST_PROPOSAL:
+            this.finalizeListProposal(payload);
+            break;
+          case GET_LIST_PROPOSAL:
+            this.getListProposal(payload);
             break;
           default: {
           }
@@ -145,7 +155,7 @@ class Store {
     });
   };
   swapToken(payload) {
-    const url = "/api/v1/swap"
+    const url = "/api/v1/swaps"
     this.callApi(url, 'POST', payload.content, payload, (err, data) => {
       if(err) {
         console.log(err)
@@ -181,7 +191,7 @@ class Store {
     });
   };
   listToken(payload) {
-    const url = "/api/v1/list"
+    const url = "/api/v1/lists"
     this.callApi(url, 'POST', payload.content, payload, (err, data) => {
       if(err) {
         console.log(err)
@@ -198,8 +208,8 @@ class Store {
       }
     });
   };
-  finalizeListToken(payload) {
-    const url = "/api/v1/finalizeList"
+  submitListProposal(payload) {
+    const url = "/api/v1/listProposals"
     this.callApi(url, 'POST', payload.content, payload, (err, data) => {
       if(err) {
         console.log(err)
@@ -208,12 +218,43 @@ class Store {
       }
 
       if(data.success) {
-        emitter.emit(TOKEN_LIST_FINALIZED, data.result);
+        emitter.emit(LIST_PROPOSAL_SUBMITTED, data.result);
       } else if (data.errorMsg) {
         emitter.emit(ERROR, data.errorMsg);
       } else {
         emitter.emit(ERROR, data.result);
       }
+    });
+  };
+  finalizeListProposal(payload) {
+    const url = "/api/v1/finalizeListProposal"
+    this.callApi(url, 'POST', payload.content, payload, (err, data) => {
+      if(err) {
+        console.log(err)
+        emitter.emit(ERROR, err);
+        return
+      }
+
+      if(data.success) {
+        emitter.emit(LIST_PROPOSAL_FINALIZED, data.result);
+      } else if (data.errorMsg) {
+        emitter.emit(ERROR, data.errorMsg);
+      } else {
+        emitter.emit(ERROR, data.result);
+      }
+    });
+  };
+
+  getListProposal(payload) {
+    const url = "/api/v1/listProposals/"+payload.content.uuid
+    this.callApi(url, 'GET', null, payload, (err, data) => {
+      if(err) {
+        console.log(err)
+        emitter.emit(ERROR, err);
+        return
+      }
+
+      emitter.emit(LIST_PROPOSAL_UPDATED, data.result);
     });
   };
 

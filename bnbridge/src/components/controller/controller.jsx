@@ -55,14 +55,12 @@ class Controller extends Component {
     let issueFee = fees.filter((fee) => {
       return fee.msg_type === 'issueMsg'
     }).map((fee) => {
-      return fee.fee
-    })
-
-    const finalFee = issueFee[0]/100000000
+      return fee.fee/100000000
+    })[0]
 
     this.setState({
       fees,
-      issueFee: finalFee
+      issueFee: issueFee
     })
   };
 
@@ -131,7 +129,7 @@ class Controller extends Component {
           <Tab label="List" />
         </Tabs>
         {tabValue === 0 && <Swap onIssue={ this.onIssue } showError={ this.showError } />}
-        {tabValue === 1 && <List showError={ this.showError } />}
+        {tabValue === 1 && <List onIssue={ this.onIssue } showError={ this.showError } />}
       </React.Fragment>
     )
   };

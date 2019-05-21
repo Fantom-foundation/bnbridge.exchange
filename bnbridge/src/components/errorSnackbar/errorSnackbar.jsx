@@ -31,7 +31,7 @@ function ErrorSnackbar(props) {
       ContentProps={{
         'aria-describedby': 'message-id',
       }}
-      message={<span id="message-id">{ error }</span>}
+      message={<span id="message-id">{ error.toString() }</span>}
       action={[
         <IconButton
           key="close"

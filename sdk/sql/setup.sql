@@ -32,6 +32,9 @@ create table tokens (
   eth_account_uuid char(36),
   bnb_account_uuid char(36),
   processed boolean,
+  listing_proposed boolean,
+  listing_proposal_uuid char(36),
+  listed boolean,
   created timestamp
 );
 
@@ -46,5 +49,24 @@ create table swaps (
   deposit_transaction_hash varchar(128),
   transfer_transaction_hash varchar(128),
   processed boolean,
+  created timestamp
+);
+
+
+drop table if exists list_proposals;
+create table list_proposals (
+  uuid char(36) primary key,
+  token_uuid char(36),
+	unique_symbol varchar(32),
+	title varchar(128),
+	description varchar(128),
+  initial_price varchar(32),
+  expiry_time bigint,
+  voting_period bigint,
+  submitted boolean,
+  transaction_hash varchar(64),
+	proposal_id bigint,
+  processed boolean,
+  voting_status varchar(32),
   created timestamp
 );

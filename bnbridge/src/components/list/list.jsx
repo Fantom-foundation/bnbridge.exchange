@@ -16,13 +16,19 @@ import {
   ERROR,
   LIST_TOKEN,
   TOKEN_LISTED,
-  FINALIZE_LIST_TOKEN,
-  TOKEN_LIST_FINALIZED
+  SUBMIT_LIST_PROPOSAL,
+  LIST_PROPOSAL_SUBMITTED,
+  FINALIZE_LIST_PROPOSAL,
+  LIST_PROPOSAL_FINALIZED,
+  FEES_UPDATED,
+  GET_LIST_PROPOSAL,
+  LIST_PROPOSAL_UPDATED,
 } from '../../constants'
 
 import Store from "../../stores";
 const dispatcher = Store.dispatcher
 const emitter = Store.emitter
+const store = Store.store
 
 const styles = theme => ({
   root: {
@@ -78,26 +84,77 @@ const styles = theme => ({
 
 class List extends Component {
   state = {
-    page: 0,
+    page: 'SubmitProposal0',
+
+    listProposal: {},
+
+    tokenListed: false,
+    tokenListingProposal: false,
+    tokenListingProposalUuid: null,
 
     token: '',
     tokenError: false,
-    proposalId: '',
-    proposalIdError: false,
+
+    expiryTime: '',
+    expiryTimeError: false,
+    votingPeriod: '',
+    votingPeriodError: false,
     initialPrice: '',
     initialPriceError: false,
+
+    listProposalFee: store.getStore('fees')?store.getStore('fees').filter((fee) => {
+      return fee.msg_type === 'submit_proposal'
+    }).map((fee) => {
+      return fee.fee/100000000
+    })[0]:0,
+    depositFee: 2000,
   };
 
   componentWillMount() {
     emitter.on(TOKEN_LISTED, this.tokenListed);
-    emitter.on(TOKEN_LIST_FINALIZED, this.tokenListFinalized);
+    emitter.on(LIST_PROPOSAL_SUBMITTED, this.listProposalSubmitted);
+    emitter.on(LIST_PROPOSAL_FINALIZED, this.listProposalFinalized);
     emitter.on(ERROR, this.error);
+    emitter.on(FEES_UPDATED, this.feesUpdated);
+    emitter.on(LIST_PROPOSAL_UPDATED, this.listProposalUpdated)
   };
 
   componentWillUnmount() {
     emitter.removeListener(TOKEN_LISTED, this.tokenListed);
-    emitter.removeListener(TOKEN_LIST_FINALIZED, this.tokenListFinalized);
-    emitter.on(ERROR, this.error);
+    emitter.removeListener(LIST_PROPOSAL_SUBMITTED, this.listProposalSubmitted);
+    emitter.removeListener(LIST_PROPOSAL_FINALIZED, this.listProposalFinalized);
+    emitter.removeListener(ERROR, this.error);
+    emitter.removeListener(FEES_UPDATED, this.feesUpdated);
+    emitter.removeListener(LIST_PROPOSAL_UPDATED, this.listProposalUpdated)
+  };
+
+  feesUpdated = () => {
+    const fees = store.getStore('fees')
+
+    let listProposalFee = fees.filter((fee) => {
+      return fee.msg_type === 'submit_proposal'
+    }).map((fee) => {
+      return fee.fee/100000000
+    })[0]
+
+    let listFee = fees.filter((fee) => {
+      return fee.msg_type === 'dexList'
+    }).map((fee) => {
+      return fee.fee/100000000
+    })[0]
+
+    this.setState({
+      listProposalFee: listProposalFee,
+      listFee: listFee
+    })
+  };
+
+  listProposalUpdated = (data)  => {
+    console.log(data)
+    this.setState({
+      listProposal: data,
+      page: 'SubmitList0'
+    })
   };
 
   error = (err) => {
@@ -106,62 +163,90 @@ class List extends Component {
 
   tokenListed = (data) => {
     this.setState({
-      page: 1,
+      page: 'Listed',
       listUuid: data.uuid,
       bnbDepositAddress: data.bnb_address
    })
   };
 
-  tokenListFinalized = (data) => {
-    this.setState({ page: 2 })
+  listProposalSubmitted = (data) => {
+    this.setState({
+      page: 'SubmitProposal1',
+      proposalUuid: data.uuid,
+      bnbDepositAddress: data.bnb_address
+   })
   };
 
-  callListToken = () => {
+  listProposalFinalized = (data) => {
+    this.setState({ page: 'SubmitProposal2' })
+  };
+
+  callSubmitListProposal = () => {
 
     const {
-      proposalId,
+      expiryTime,
+      votingPeriod,
       token,
       initialPrice,
     } = this.state
 
     const content = {
-      token: token,
-      proposalId: proposalId,
+      token_uuid: token,
+      expiry_time: expiryTime,
+      voting_period: votingPeriod,
       initial_price: initialPrice
+    }
+
+    dispatcher.dispatch({type: SUBMIT_LIST_PROPOSAL, content })
+  };
+
+  callFinalizeListProposal = () => {
+    const {
+      proposalUuid
+    } = this.state
+
+    const content = {
+      uuid: proposalUuid
+    }
+
+    dispatcher.dispatch({type: FINALIZE_LIST_PROPOSAL, content })
+  };
+
+  callList = () => {
+    const {
+      listProposal
+    } = this.state
+
+    const content = {
+      uuid: listProposal.uuid
     }
 
     dispatcher.dispatch({type: LIST_TOKEN, content })
   };
 
-  callFinalizeToken = () => {
-    const {
-      listUuid
-    } = this.state
-
-    const content = {
-      uuid: listUuid
-    }
-
-    dispatcher.dispatch({type: FINALIZE_LIST_TOKEN, content })
-  };
-
-  validateListToken = () => {
+  validateListProposal = () => {
     this.setState({
-      proposalIdError: false,
+      expiryTimeError: false,
+      votingPeriodError: false,
       tokenError: false,
       initialPriceError: false
     })
 
     const {
-      proposalId,
+      expiryTime,
+      votingPeriod,
       token,
       initialPrice,
     } = this.state
 
     let error = false
 
-    if(!proposalId || proposalId === '') {
-      this.setState({ proposalIdError: true })
+    if(!votingPeriod || votingPeriod === '') {
+      this.setState({ votingPeriodError: true })
+      error = true
+    }
+    if(!expiryTime || expiryTime === '') {
+      this.setState({ expiryTimeError: true })
       error = true
     }
     if(!token || token === '') {
@@ -178,40 +263,62 @@ class List extends Component {
 
   onNext = (event) => {
     switch (this.state.page) {
-      case 0:
-        if(this.validateListToken()) {
-          this.callListToken()
+      case 'SubmitProposal0':
+        if(this.validateListProposal()) {
+          this.callSubmitListProposal()
         }
         break;
-      case 1:
-        this.callFinalizeToken()
+      case 'SubmitProposal1':
+        this.callFinalizeListProposal()
         break;
-      case 2:
+      case 'SubmitProposal2':
         this.resetPage()
         break;
+      case 'SubmitList0':
+        this.callList()
+        break;
       default:
-
     }
   };
 
   resetPage = () => {
     this.setState({
-      page: 0,
+      page: 'SubmitProposal0',
       token: '',
       tokenError: false,
-      proposalId: '',
-      proposalIdError: false,
+      expiryTime: '',
+      expiryTimeError: false,
+      votingPeriod: '',
+      votingPeriod: false,
       initialPrice: '',
       initialPriceError: false,
     })
   };
 
   onBack = (event) => {
-    this.setState({ page: 0 })
+    this.setState({ page: 'SubmitProposal0' })
   };
 
   onTokenSelected = (value) => {
-    this.setState({ token: value })
+    const tokens = store.getStore('tokens')
+    const theToken = tokens.filter((token) => {
+      return token.uuid === value
+    })[0]
+
+    this.setState({
+      token: value,
+      page: (theToken&&theToken.listed) ? 'Listed' : ((theToken&&theToken.listing_proposed) ? 'GettingList' : 'SubmitProposal0'),
+      tokenListed: theToken?theToken.listed:null,
+      tokenListingProposal: theToken?theToken.listing_proposed:null,
+      tokenListingProposalUuid: theToken?theToken.listing_proposal_uuid:null
+    })
+
+    if(theToken && !theToken.listed && theToken.listing_proposed) {
+      const content = {
+        uuid: theToken.listing_proposal_uuid
+      }
+      dispatcher.dispatch({type: GET_LIST_PROPOSAL, content })
+    }
   };
 
   onChange = (event) => {
@@ -220,14 +327,15 @@ class List extends Component {
     this.setState(val)
   };
 
-  renderPage0() {
+  renderSubmitProposal0 = () => {
     const {
-      classes,
-      onIssue
+      classes
     } = this.props
     const {
-      proposalId,
-      proposalIdError,
+      expiryTime,
+      expiryTimeError,
+      votingPeriod,
+      votingPeriodError,
       initialPrice,
       initialPriceError
     } = this.state
@@ -235,16 +343,24 @@ class List extends Component {
     return (
       <React.Fragment>
         <Grid item xs={ 12 }>
-          <AssetSelection onIssue={ onIssue } onTokenSelected={ this.onTokenSelected } />
+          <Input
+            id="expiryTime"
+            fullWidth={ true }
+            label="Expiry Time"
+            placeholder="eg: 15 (days)"
+            value={ expiryTime }
+            error={ expiryTimeError }
+            onChange={ this.onChange }
+          />
         </Grid>
         <Grid item xs={ 12 }>
           <Input
-            id="proposalId"
+            id="votingPeriod"
             fullWidth={ true }
-            label="Proposal ID"
-            placeholder="eg: 15"
-            value={ proposalId }
-            error={ proposalIdError }
+            label="Voting Period"
+            placeholder="eg: 7 (days)"
+            value={ votingPeriod }
+            error={ votingPeriodError }
             onChange={ this.onChange }
           />
         </Grid>
@@ -253,27 +369,28 @@ class List extends Component {
             id="initialPrice"
             fullWidth={ true }
             label="Initial Price"
-            placeholder="eg: 1000000"
+            placeholder="eg: 100000000"
             value={ initialPrice }
             error={ initialPriceError }
             onChange={ this.onChange }
           />
         </Grid>
         <Grid item xs={ 12 }>
-          <Typography className={ classes.disclaimer }>By listing a token here, you agree to bnbridge's Terms of Service.</Typography>
+          <Typography className={ classes.disclaimer }>By submitting a listing proposal here, you agree to bnbridge's Terms of Service.</Typography>
         </Grid>
       </React.Fragment>
     )
   };
 
-  renderPage1() {
+  renderSubmitProposal1 = () => {
     const {
-      bnbDepositAddress
+      bnbDepositAddress,
+      listProposalFee,
+      depositFee
     } = this.state
 
     const {
-      classes,
-      listFee
+      classes
     } = this.props
 
     return (
@@ -283,7 +400,7 @@ class List extends Component {
             Here's what you need to do next:
           </Typography>
           <Typography className={ classes.instructionBold }>
-            Transfer {listFee} BNB
+            Transfer {listProposalFee + depositFee} BNB
           </Typography>
           <Typography className={ classes.instructions }>
             to
@@ -299,7 +416,7 @@ class List extends Component {
     )
   };
 
-  renderPage2 = () => {
+  renderSubmitProposal2 = () => {
     const {
       classes
     } = this.props
@@ -313,15 +430,114 @@ class List extends Component {
           <Typography className={ classes.instructions }>
             Your transaction was successfull.
           </Typography>
+          <Typography className={ classes.instructions }>
+            The next steps require Binance validators to vote on whether they want the token listed on the DEX. Once 50% of the validators vote "Yes", you will need to submit the list transaction.
+          </Typography>
+          <Typography className={ classes.instructions }>
+            You will be able to do so by usinng this utility.
+          </Typography>
         </Grid>
       </React.Fragment>
     )
   };
 
+  renderListed = () => {
+    const {
+      classes
+    } = this.props
+
+    return (
+      <Grid item xs={ 12 } className={ classes.frame }>
+        <Typography className={ classes.instructionBold }>
+          Token Listed
+        </Typography>
+        <Typography className={ classes.instructionBold }>
+          This token listed on Binance DEX.
+        </Typography>
+        <Typography className={ classes.instructions }>
+          You should be able to interact with it on the exchange.
+        </Typography>
+      </Grid>)
+  };
+
+  renderGettingList = () => {
+    const {
+      classes
+    } = this.props
+
+    return (
+      <Grid item xs={ 12 } className={ classes.frame }>
+        <Typography className={ classes.instructionBold }>
+          Getting Proposal Status
+        </Typography>
+        <Typography className={ classes.instructions }>
+          This token has a previous token listing proposal submitted to Binance.
+        </Typography>
+        <Typography className={ classes.instructions }>
+          Please hold on while we get the listing information
+        </Typography>
+      </Grid>)
+  };
+
+  renderSubmitList0 = () => {
+    const {
+      classes
+    } = this.props
+
+    const {
+      listProposal
+    } = this.state
+
+    if(!listProposal) {
+      return null
+    }
+
+    return (
+      <React.Fragment>
+        <Grid item xs={ 12 } className={ classes.frame }>
+          <Typography className={ classes.instructionBold }>
+            {listProposal.chain_info.value.title}
+          </Typography>
+          <Typography className={ classes.instructions }>
+            Proposal ID: {listProposal.proposal_id}
+          </Typography>
+          <Typography className={ classes.instructions }>
+            Status: {listProposal.chain_info.value.proposal_status}
+          </Typography>
+          {
+            listProposal.chain_info.value.proposal_status !== 'Passed' &&
+            <Typography className={ classes.instructions }>
+              Once the vote has passed you will be able to list the token on the Binance DEX
+            </Typography>
+          }
+        </Grid>
+        {
+          listProposal.chain_info.value.proposal_status === 'Passed' &&
+          <Grid item xs={ 12 } align="right" className={ classes.button }>
+            <Button
+              label="List"
+              onClick={ this.onNext }
+            />
+          </Grid>
+        }
+      </React.Fragment>
+      )
+  };
+
+  renderAssetSelection = () => {
+
+    const { onIssue } = this.props
+
+    return (
+      <Grid item xs={ 12 }>
+        <AssetSelection onIssue={ onIssue } onTokenSelected={ this.onTokenSelected } />
+      </Grid>
+    )
+  };
+
   render() {
     const {
-      classes,
-      onBack
+      classes
     } = this.props
 
     const {
@@ -330,21 +546,30 @@ class List extends Component {
 
     return (
       <Grid container className={ classes.root }>
-        { page === 0 && this.renderPage0() }
-        { page === 1 && this.renderPage1() }
-        { page === 2 && this.renderPage2() }
-        <Grid item xs={ 6 } className={ classes.button }>
-          <Button
-            label="Back"
-            onClick={ page === 0 ? onBack : this.onBack }
-          />
-        </Grid>
-        <Grid item xs={ 6 } align="right" className={ classes.button }>
-          <Button
-            label="Next"
-            onClick={ this.onNext }
-          />
-        </Grid>
+        { (page === 'SubmitProposal0' || page === 'GettingList' || page === 'SubmitList0') && this.renderAssetSelection() }
+        { page === 'SubmitProposal0' && this.renderSubmitProposal0() }
+        { page === 'SubmitProposal1' && this.renderSubmitProposal1() }
+        { page === 'SubmitProposal2' && this.renderSubmitProposal2() }
+        { page === 'Listed' && this.renderListed() }
+        { page === 'GettingList' &&  this.renderGettingList() }
+        { page === 'SubmitList0' && this.renderSubmitList0() }
+        { !(['SubmitProposal0', 'GettingList', 'SubmitList0'].includes(page)) &&
+          <Grid item xs={ 6 } align='left' className={ classes.button }>
+            <Button
+              label="Back"
+              onClick={ this.onBack }
+            />
+          </Grid>
+        }
+        {
+          !(['GettingList', 'SubmitList0', 'Listed' ].includes(page)) &&
+          <Grid item xs={ !(page === 'SubmitProposal0' || page === 'SubmitList0') ? 6 : 12 } align="right" className={ classes.button }>
+            <Button
+              label="Next"
+              onClick={ this.onNext }
+            />
+          </Grid>
+        }
       </Grid>
     )
   }

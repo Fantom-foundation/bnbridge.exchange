@@ -1,11 +1,11 @@
 const BnbApiClient = require('@binance-chain/javascript-sdk');
 const axios = require('axios');
 
-const MNEMONIC = 'accident mix soldier idea surface turn weekend over canal three awesome develop spoon gossip build basic shallow huge memory same bar album timber announce';
+const MNEMONIC = 'garlic ice design cruel gorilla harvest side hat turn clap guide tuna already ice agent tenant fee wine theory banner price school swap wisdom';
 const API = 'https://testnet-dex.binance.org/';
-const ASSET = 'BGE-223';
-const AMOUNT = 1;
-const ADDRESS_TO = 'tbnb166zsmcj6fmtdx87ksvt88dm99460a5aqgyg6rr';
+const ASSET = 'BNB';
+const AMOUNT = 2010;
+const ADDRESS_TO = 'tbnb103tgyx0xac3pga4e2q3t72czjrvjghhl94ch4e';
 const MESSAGE = 'Deposit';
 
 // const PRIVATE_KEY = 'e9cd3a2a8c19f8ba594484e0aab212a364e804937a5c25b41451665d3b02c11e';

@@ -11,7 +11,7 @@ const bnb = {
   spawnProcess() {
     return pty.spawn(shell, [], {
       name: 'xterm-color',
-      cols: 800,
+      cols: 8000,
       rows: 30,
       cwd: process.env.HOME,
       env: process.env
@@ -99,6 +99,11 @@ const bnb = {
         ptyProcess.write('exit\r');
       }
 
+      if(data.includes("ERROR:")) {
+        callback(data)
+        ptyProcess.write('exit\r');
+      }
+
       if(data.includes('Password to sign with')) {
         ptyProcess.write(password+"\r");
       }
@@ -136,22 +141,20 @@ const bnb = {
 
   transfer(mnemonic, publicTo, amount, asset, message, callback) {
 
-    console.log('TRANSFER INFORMATION')
-    console.log(mnemonic)
-    console.log(publicTo)
-    console.log(amount)
-    console.log(asset)
-    console.log(message)
+    mnemonic = mnemonic.replace(/(\r\n|\n|\r)/gm, "");
 
+    console.log(mnemonic)
     const privateFrom = BnbApiClient.crypto.getPrivateKeyFromMnemonic(mnemonic);
     const publicFrom = BnbApiClient.crypto.getAddressFromPrivateKey(privateFrom);
 
     const sequenceURL = `${config.api}api/v1/account/${publicFrom}/sequence`;
 
+    console.log(config.api)
     const bnbClient = new BnbApiClient(config.api);
     bnbClient.setPrivateKey(privateFrom);
     bnbClient.initChain();
 
+    console.log(bnbClient)
     httpClient.get(sequenceURL)
     .then((res) => {
       const sequence = res.data.sequence || 0
@@ -200,17 +203,153 @@ const bnb = {
     bnbClient.getBalance(address).then((balances) => { callback(null, balances ) });
   },
 
-  list(symbol, keyName, initPrice, proposalId) {
+  submitListProposal(symbol, keyName, password, initPrice, title, description, expireTime, votingPeriod, deposit, callback) {
     const ptyProcess = bnb.spawnProcess()
 
     ptyProcess.on('data', function(data) {
-      // process.stdout.write(data);
-      callback(null, data)
-      ptyProcess.write('exit\r');
+      process.stdout.write(data);
+
+      if(data.includes('Password to sign with')) {
+        ptyProcess.write(password+"\r");
+      } else if(data.includes("ERROR:")) {
+        callback(data)
+        ptyProcess.write('exit\r');
+      } else if(data.includes('TxHash')) {
+        try {
+          const responseJson = JSON.parse(data.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, ''))
+
+          callback(null, responseJson.TxHash)
+          ptyProcess.write('exit\r');
+        } catch(err) {
+          callback(err)
+          ptyProcess.write('exit\r');
+        }
+      }
+    });
+
+    ptyProcess.write('cd '+config.filePath+'\r');
+    ptyProcess.write('./'+config.fileName+' gov submit-list-proposal --from '+keyName+' --base-asset-symbol '+symbol+' --quote-asset-symbol BNB --init-price '+initPrice+' --title "'+title+'" --description "'+description+'" --expire-time '+expireTime+' --voting-period '+votingPeriod+' --deposit '+deposit+':BNB --chain-id='+config.chainID+' --node='+config.nodeData+' --trust-node --json\r');
+  },
+
+  submitDeposit(proposalId, amount, keyName, callback) {
+    const ptyProcess = bnb.spawnProcess()
+
+    ptyProcess.on('data', function(data) {
+      process.stdout.write(data);
+
+      if(data.includes('Password to sign with')) {
+        ptyProcess.write(password+"\r");
+      }
+
+      if(data.includes("Committed")) {
+        let index = data.indexOf('Issued '+symbol)
+        let uniqueSymbol = data.substr(index+7, 7)
+
+        callback(null, data)
+        ptyProcess.write('exit\r');
+      }
+    });
+
+    ptyProcess.write('cd '+config.filePath+'\r');
+    ptyProcess.write('./'+config.fileName+' gov deposit --from '+keyName+'--proposal-id '+proposalId+' --deposit '+amount+'：BNB --chain-id='+config.chainID+' --node='+config.nodeData+' --trust-node --json\r');
+  },
+
+  list(symbol, keyName, password, initPrice, proposalId, callback) {
+    const ptyProcess = bnb.spawnProcess()
+
+    ptyProcess.on('data', function(data) {
+      process.stdout.write(data);
+
+      if(data.includes('Password to sign with')) {
+        ptyProcess.write(password+"\r");
+      }
+
+      if(data.includes("TxHash")) {
+        try {
+          const responseJson = JSON.parse(data.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, ''))
+
+          callback(null, responseJson.TxHash)
+          ptyProcess.write('exit\r');
+        } catch(err) {
+          callback(err)
+          ptyProcess.write('exit\r');
+        }
+      }
     });
 
     ptyProcess.write('cd '+config.filePath+'\r');
     ptyProcess.write('./'+config.fileName+' dex list -s '+symbol+' --quote-asset-symbol BNB --from '+keyName+' --init-price '+initPrice+' --proposal-id '+proposalId+' --chain-id='+config.chainID+' --node='+config.nodeData+' --trust-node --json\r');
+  },
+
+  getListProposal(proposalId, callback) {
+    const ptyProcess = bnb.spawnProcess()
+
+    ptyProcess.on('data', function(data) {
+
+      // process.stdout.write(data);
+
+      if(data.includes("ERROR:")) {
+        callback(data)
+        ptyProcess.write('exit\r');
+      } else if(data.includes("gov/TextProposal")) {
+        try {
+
+          let tmpData = data.replace(/\s\s+/g, ' ').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
+
+          if(tmpData.includes(' PS ')) {
+            let index = tmpData.indexOf(' PS ')
+            tmpData = tmpData.substring(0, index).trim()
+          }
+
+          console.log(tmpData)
+          const responseJson = JSON.parse(tmpData)
+
+          callback(null, responseJson)
+          ptyProcess.write('exit\r');
+        } catch(err) {
+          callback(err)
+          ptyProcess.write('exit\r');
+        }
+      }
+    });
+
+    ptyProcess.write('cd '+config.filePath+'\r');
+    ptyProcess.write('./'+config.fileName+' gov query-proposal --proposal-id '+proposalId+' --chain-id='+config.chainID+' --node='+config.nodeData+' --trust-node\r');
+  },
+
+  getListProposals(address, symbol, callback) {
+    const ptyProcess = bnb.spawnProcess()
+
+    ptyProcess.on('data', function(data) {
+
+      process.stdout.write(data);
+
+      if(data.includes("ERROR:")) {
+        callback(data)
+        ptyProcess.write('exit\r');
+      } else if (data.includes(symbol)) {
+        const responseObj = data.trim().split(' ')
+
+        let proposalId = null
+        if(responseObj.length > 0) {
+          proposalId = responseObj[0]
+
+          callback(null, proposalId)
+          ptyProcess.write('exit\r');
+          return
+        }
+
+        callback('Unable to process')
+        ptyProcess.write('exit\r');
+      }
+    });
+
+    ptyProcess.write('cd '+config.filePath+'\r');
+    ptyProcess.write('./'+config.fileName+' gov query-proposals --depositer '+address+' --chain-id='+config.chainID+' --node='+config.nodeData+' --trust-node\r');
+  },
+
+  vote() {
+
   }
 }
 

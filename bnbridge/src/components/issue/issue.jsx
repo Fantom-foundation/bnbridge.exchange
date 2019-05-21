@@ -194,6 +194,9 @@ class Issue extends Component {
       case 1:
         this.callFinalizeToken()
         break;
+      case 2:
+        this.props.onBack()
+        break;
       default:
 
     }

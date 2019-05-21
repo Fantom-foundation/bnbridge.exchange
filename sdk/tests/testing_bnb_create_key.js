@@ -20,17 +20,17 @@ ptyProcess.on('data', function(data) {
   process.stdout.write(data);
 
   if(data.includes("Enter a passphrase")) {
-    process.stdout.write('Setting password to '+PASSWORD);
+    // process.stdout.write('Setting password to '+PASSWORD);
     ptyProcess.write(PASSWORD+'\r');
   }
 
   if(data.includes("Repeat the passphrase")) {
-    process.stdout.write('Confirming password to '+PASSWORD);
+    // process.stdout.write('Confirming password to '+PASSWORD);
     ptyProcess.write(PASSWORD+'\r');
   }
 
   if(data.includes("**Important**")) {
-    process.stdout.write(data);
+    // process.stdout.write(data);
 
     const tmpData = data.replace(/\s\s+/g, ' ').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '').split(' ');
     const publicKey = tmpData[6]
@@ -44,7 +44,7 @@ ptyProcess.on('data', function(data) {
   }
 
   if(data.includes("override the existing name")) {
-    process.stdout.write('Overwriting key');
+    // process.stdout.write('Overwriting key');
     ptyProcess.write('y\r');
   }
 });

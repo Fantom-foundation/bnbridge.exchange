@@ -3,11 +3,11 @@ const axios = require('axios');
 const api = 'http://localhost:8000'
 const httpClient = axios.create({ baseURL: api });
 
-const swapUUID = "879aaf6e-7a01-1c97-344d-f66b9a448f36"
+const listingUUID = "2db4dc87-5425-efe9-d939-ff9520b95860"
 
 httpClient
-  .post('/api/v1/finalizeSwap', {
-    uuid: swapUUID
+  .post('/api/v1/finalizeListProposal', {
+    uuid: listingUUID
   })
   .then((res) => {
     if (res.status === 200) {
