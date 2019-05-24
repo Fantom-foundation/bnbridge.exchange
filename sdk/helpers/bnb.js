@@ -111,7 +111,7 @@ const bnb = {
     });
 
     ptyProcess.write('cd '+config.filePath+'\r');
-    ptyProcess.write('./'+config.fileName+' token issue --token-name "'+tokenName+'" --total-supply '+totalSupply+' --symbol '+symbol+' --mintable --from '+keyName+' --chain-id='+config.chainID+' --node='+config.nodeData+' --trust-node\r');
+    ptyProcess.write('./'+config.fileName+' token issue --token-name "'+tokenName+'" --total-supply '+totalSupply+' --symbol '+symbol+' --from '+keyName+' --chain-id='+config.chainID+' --node='+config.nodeData+' --trust-node\r');
   },
 
   mint(amount, symbol, keyName, callback) {

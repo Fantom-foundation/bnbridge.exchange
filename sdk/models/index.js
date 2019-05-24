@@ -116,7 +116,7 @@ const models = {
 
   processBNBAccount(body, callback) {
     const { symbol } = body
-    const keyName = symbol+'_key'
+    const keyName = config.keyPrepend+symbol+'_key'
     const password = models.genPassword()
 
     bnb.createKey(keyName, password, (err, keyData) => {
@@ -880,7 +880,7 @@ const models = {
       })
       .reduce(reducer, 0)
 
-      let depositRequired = (2000 * 100000000) // 1000 on mainnet. Move to config
+      let depositRequired = (1000 * 100000000) // 1000 on mainnet. Move to config
       totalRequired = totalRequired + depositRequired
 
       bnb.getBalance(proposalInfo.bnb_address, (err, balances) => {

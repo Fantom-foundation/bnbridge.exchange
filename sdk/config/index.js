@@ -11,6 +11,7 @@ const config = {
   chainID: "Binance-Chain-Tigris", //live
   nodeData: "https://dataseed5.defibit.io:443", //live
   nodeHTTPS: "https://dataseed5.defibit.io:443", //live
+  keyPrepend: "LIVE_",
 
   //Ethereum
   provider: 'https://mainnet.infura.io/v3/2b1dbb61817f4ae6ac90d9b41662993b', //live
