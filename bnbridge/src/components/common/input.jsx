@@ -3,7 +3,8 @@ import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import {
   FormControl,
-  OutlinedInput
+  OutlinedInput,
+  FormHelperText
 } from '@material-ui/core';
 import StyledLabel from './label.jsx';
 
@@ -31,19 +32,21 @@ function StyledInput(props) {
     error
   } = props;
 
+  console.log(helpertext)
+
   return (
     <FormControl className={classes.root} variant="outlined" fullWidth={fullWidth} error={error}>
       <StyledLabel label={ label } />
       <OutlinedInput
         id={ id }
         placeholder={ placeholder }
-        helpertext={ helpertext }
         fullWidth={ fullWidth }
         defaultValue={ defaultValue }
         labelWidth={ 0 }
         value={ value }
         onChange={ onChange }
       />
+    { helpertext && <FormHelperText>{helpertext}</FormHelperText> }
     </FormControl>
   )
 }

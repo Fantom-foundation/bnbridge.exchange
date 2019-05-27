@@ -15,12 +15,14 @@ import {
   SWAP_TOKEN,
   TOKEN_SWAPPED,
   FINALIZE_SWAP_TOKEN,
-  TOKEN_SWAP_FINALIZED
+  TOKEN_SWAP_FINALIZED,
+  TOKENS_UPDATED
 } from '../../constants'
 
 import Store from "../../stores";
 const dispatcher = Store.dispatcher
 const emitter = Store.emitter
+const store = Store.store
 
 const styles = theme => ({
   root: {
@@ -70,18 +72,31 @@ class Swap extends Component {
     erc20AddressError: false,
     amount: '',
     amountError: false,
+    amountErrorMessage: '',
+    amountHelperText: '',
+    tokens: []
   };
 
   componentWillMount() {
+    emitter.on(TOKENS_UPDATED, this.tokensUpdated);
     emitter.on(TOKEN_SWAPPED, this.tokenSwapped);
     emitter.on(TOKEN_SWAP_FINALIZED, this.tokenSwapFinalized);
     emitter.on(ERROR, this.error);
   };
 
   componentWillUnmount() {
+    emitter.removeListener(TOKENS_UPDATED, this.tokensUpdated);
     emitter.removeListener(TOKEN_SWAPPED, this.tokenSwapped);
     emitter.removeListener(TOKEN_SWAP_FINALIZED, this.tokenSwapFinalized);
     emitter.removeListener(ERROR, this.error);
+  };
+
+  tokensUpdated = () => {
+    const tokens = store.getStore('tokens')
+
+    this.setState({
+      tokens: tokens
+    })
   };
 
   error = (err) => {
@@ -136,7 +151,8 @@ class Swap extends Component {
       tokenError: false,
       bnbAddressError: false,
       erc20AddressError: false,
-      amountError: false
+      amountError: false,
+      amountErrorMessage: ''
     })
 
     const {
@@ -144,6 +160,7 @@ class Swap extends Component {
       bnbAddress,
       erc20address,
       amount,
+      tokens
     } = this.state
 
     let error = false
@@ -165,7 +182,22 @@ class Swap extends Component {
       error = true
     }
 
-    return !error
+    let theToken = tokens.filter((tok) => {
+      return tok.uuid === token
+    })
+
+    if(theToken && theToken.length > 0) {
+
+      if(theToken[0].minimum_swap_amount != null && parseFloat(amount) < parseFloat(theToken[0].minimum_swap_amount)) {
+        this.setState({ amountError: true, amountErrorMessage: 'Amount < Minimum Swap Amount: '+theToken[0].minimum_swap_amount+' '+theToken[0].symbol })
+        error = true
+      }
+
+      return !error
+    }
+
+    return false
+
   };
 
   onNext = (event) => {
@@ -205,7 +237,24 @@ class Swap extends Component {
   };
 
   onTokenSelected = (value) => {
-    this.setState({ token: value })
+
+    const {
+      tokens
+    } = this.state
+
+    let theToken = tokens.filter((tok) => {
+      return tok.uuid === value
+    })
+
+    let amountHelperText = ''
+
+    if(theToken && theToken.length > 0) {
+      if(theToken[0].minimum_swap_amount != null) {
+        amountHelperText = 'Minimum amount is '+theToken[0].minimum_swap_amount+' '+theToken[0].symbol
+      }
+    }
+
+    this.setState({ token: value, amountHelperText: amountHelperText })
   };
 
   onChange = (event) => {
@@ -222,7 +271,9 @@ class Swap extends Component {
       erc20address,
       erc20AddressError,
       amount,
-      amountError
+      amountError,
+      amountErrorMessage,
+      amountHelperText,
     } = this.state
 
     const {
@@ -264,6 +315,7 @@ class Swap extends Component {
             value={ amount }
             error={ amountError }
             onChange={ this.onChange }
+            helpertext={ amountErrorMessage && amountErrorMessage !== '' ? amountErrorMessage : amountHelperText }
           />
         </Grid>
         <Grid item xs={ 12 }>
@@ -357,7 +409,7 @@ class Swap extends Component {
         }
         <Grid item xs={ page > 0 ? 6 : 12 } align='right' className={ classes.button }>
           <Button
-            label="Next"
+            label={page === 2 ? "Done" : "Next"}
             onClick={ this.onNext }
           />
         </Grid>

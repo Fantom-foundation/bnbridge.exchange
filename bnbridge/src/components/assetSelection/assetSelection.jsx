@@ -37,8 +37,6 @@ class AssetSelection extends Component {
 
   constructor() {
     super();
-
-    this.tokensUpdated = this.tokensUpdated.bind(this);
   }
 
   componentWillMount() {
@@ -50,7 +48,7 @@ class AssetSelection extends Component {
     emitter.removeListener(TOKENS_UPDATED, this.tokensUpdated);
   };
 
-  tokensUpdated() {
+  tokensUpdated = () => {
     const tokens = store.getStore('tokens')
     const tokenOptions = tokens.map((token) => {
       return {

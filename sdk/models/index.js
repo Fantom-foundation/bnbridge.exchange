@@ -324,7 +324,7 @@ const models = {
    *  Returns a list of tokens
    */
   getTokens(req, res, next) {
-    db.manyOrNone('select tok.uuid, tok.name, tok.symbol, tok.total_supply, tok.listed, tok.listing_proposed, tok.listing_proposal_uuid, tok.erc20_address, eth.address as eth_address from tokens tok left join eth_accounts eth on eth.uuid = tok.eth_account_uuid where processed is true;')
+    db.manyOrNone('select tok.uuid, tok.name, tok.symbol, tok.total_supply, tok.minimum_swap_amount, tok.fee_per_swap, tok.listed, tok.listing_proposed, tok.listing_proposal_uuid, tok.erc20_address, eth.address as eth_address from tokens tok left join eth_accounts eth on eth.uuid = tok.eth_account_uuid where processed is true;')
     .then((tokens) => {
       if (!tokens) {
         res.status(404)
@@ -348,7 +348,7 @@ const models = {
    *  Returns a specific token details. Deposit addresses
    */
   getToken(req, res, next) {
-    db.oneOrNone('select tok.uuid, tok.name, tok.symbol, tok.total_supply, tok.erc20_address, eth.address as eth_address from tokens tok left join eth_accounts eth on eth.uuid = tok.eth_account_uuid where tok.uuid = $1 and processed is true;',[req.params.uuid])
+    db.oneOrNone('select tok.uuid, tok.name, tok.symbol, tok.total_supply, tok.minimum_swap_amount, tok.fee_per_swap, tok.erc20_address, eth.address as eth_address from tokens tok left join eth_accounts eth on eth.uuid = tok.eth_account_uuid where tok.uuid = $1 and processed is true;',[req.params.uuid])
     .then((token) => {
       if (!token) {
         res.status(404)
@@ -417,7 +417,8 @@ const models = {
       amount
     } = req.body
 
-    models.insertSwap(token_uuid, bnb_address, eth_address, amount, (err, insertResponse) => {
+
+    models.getTokenSwapInfo(token_uuid, (err, tokenInfo) => {
       if(err) {
         console.log(err)
         res.status(500)
@@ -425,9 +426,22 @@ const models = {
         return next(null, req, res, next)
       }
 
-      const uuid = insertResponse.uuid
+      if(!tokenInfo) {
+        res.status(400)
+        res.body = { 'status': 400, 'success': false, 'result': 'Unable to get token information' }
+        return next(null, req, res, next)
+      }
 
-      models.getTokenSwapInfo(token_uuid, (err, tokenInfo) => {
+      //validate amount only if it is set for the token. Need to figure out who sets this amount up? Manual per token owner?
+      if(tokenInfo.minimum_swap_amount !== null && tokenInfo.minimum_swap_amount !== '') {
+        if(parseFloat(amount) < parseFloat(tokenInfo.minimum_swap_amount)) {
+          res.status(400)
+          res.body = { 'status': 400, 'success': false, 'result': 'Swap amount < minimum swap amount' }
+          return next(null, req, res, next)
+        }
+      }
+
+      models.insertSwap(token_uuid, bnb_address, eth_address, amount, (err, insertResponse) => {
         if(err) {
           console.log(err)
           res.status(500)
@@ -435,11 +449,7 @@ const models = {
           return next(null, req, res, next)
         }
 
-        if(!tokenInfo) {
-          res.status(500)
-          res.body = { 'status': 500, 'success': false, 'result': 'Unable to get token information' }
-          return next(null, req, res, next)
-        }
+        const uuid = insertResponse.uuid
 
         tokenInfo.swap_uuid = uuid
 
@@ -483,7 +493,7 @@ const models = {
   },
 
   getTokenSwapInfo(tokenUuuid, callback) {
-    db.oneOrNone('select tok.uuid, tok.name, tok.symbol, tok.unique_symbol, tok.total_supply, tok.erc20_address, eth.address as eth_address, bnb.address as bnb_address from tokens tok left join eth_accounts eth on eth.uuid = tok.eth_account_uuid left join bnb_accounts bnb on bnb.uuid = tok.bnb_account_uuid where tok.uuid = $1;', [tokenUuuid])
+    db.oneOrNone('select tok.uuid, tok.name, tok.symbol, tok.unique_symbol, tok.total_supply, tok.fee_per_swap, tok.minimum_swap_amount, tok.erc20_address, eth.address as eth_address, bnb.address as bnb_address from tokens tok left join eth_accounts eth on eth.uuid = tok.eth_account_uuid left join bnb_accounts bnb on bnb.uuid = tok.bnb_account_uuid where tok.uuid = $1;', [tokenUuuid])
     .then((response) => {
       callback(null, response)
     })
