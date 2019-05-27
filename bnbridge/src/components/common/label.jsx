@@ -6,13 +6,20 @@ import {
 } from '@material-ui/core';
 
 const styles = theme => ({
+  inline: {
+    display: 'inline-block',
+    width: 'auto'
+  }
 });
 
 function Label(props) {
-  const { label } = props;
+  const {
+    label,
+    classes
+  } = props;
 
   return (
-    <Typography variant="h6" gutterBottom>
+    <Typography variant="h6" gutterBottom className={ classes.inline }>
       {label}
     </Typography>
   )

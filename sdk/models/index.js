@@ -68,7 +68,8 @@ const models = {
       name,
       symbol,
       total_supply,
-      erc20_address
+      erc20_address,
+      mintable
     } = body
     if(!name) {
       return 'name is required'
@@ -82,6 +83,9 @@ const models = {
     if(!erc20_address) {
       return 'erc20_address is required'
     }
+    if(!mintable) {
+      return 'mintable is required'
+    }
 
     return true
   },
@@ -92,12 +96,13 @@ const models = {
       symbol,
       total_supply,
       erc20_address,
+      mintable
     } = body
 
     total_supply = total_supply/10000000000 // divide by 18 decimals of erc20 multiply by 8 deceimals of binance
     total_supply = total_supply.toFixed(0)
 
-    db.oneOrNone('insert into tokens (uuid, name, symbol, total_supply, erc20_address, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, now()) returning uuid', [name, symbol, total_supply, erc20_address])
+    db.oneOrNone('insert into tokens (uuid, name, symbol, total_supply, erc20_address, mintable, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, $6, $7, now()) returning uuid', [name, symbol, total_supply, erc20_address, mintable])
     .then((response) => {
       callback(null, response)
     })
@@ -164,7 +169,7 @@ const models = {
   },
 
   getTokenInfo(uuid, callback) {
-    db.oneOrNone('select tok.uuid, tok.name, tok.symbol, tok.unique_symbol, tok.total_supply, tok.erc20_address, bnb.address as bnb_address from tokens tok left join bnb_accounts bnb on bnb.uuid = tok.bnb_account_uuid where tok.uuid = $1;',[uuid])
+    db.oneOrNone('select tok.uuid, tok.name, tok.symbol, tok.unique_symbol, tok.total_supply, tok.erc20_address, tok.mintable, tok.fee_per_swap, tok.minimum_swap_amount, bnb.address as bnb_address from tokens tok left join bnb_accounts bnb on bnb.uuid = tok.bnb_account_uuid where tok.uuid = $1;',[uuid])
     .then((token) => {
       callback(null, token)
     })
@@ -213,7 +218,7 @@ const models = {
             return next(null, req, res, next)
           }
 
-          bnb.issue(tokenInfo.name, tokenInfo.total_supply, tokenInfo.symbol, key.key_name, key.password, (err, issueResult) => {
+          bnb.issue(tokenInfo.name, tokenInfo.total_supply, tokenInfo.symbol, tokenInfo.mintable, key.key_name, key.password, (err, issueResult) => {
             if(err) {
               console.log(err)
               res.status(500)

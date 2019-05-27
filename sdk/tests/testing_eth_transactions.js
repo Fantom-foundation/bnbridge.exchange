@@ -4,9 +4,9 @@ const config = require('../config')
 var web3 = new Web3(new Web3.providers.HttpProvider(config.provider));
 
 
-const contractAddress = '0x0897677cadb29c15c473044f40b64b69e5e53751'
+const contractAddress = '0x8622701992bd91d45f24694fd3cbd60fd4f351da'
 const accountAddress = '0xb258aD4125e84068F3A47fbBC4F6aCeD2bC148EC'
-const depositAddress = '0x31486289c00C9255f8E565FE65d28467363F846f'
+const depositAddress = '0x91E8E1e174D93a8E50c10C3F49B9c5b3C0022966'
 
 let myContract = new web3.eth.Contract(config.erc20ABI, contractAddress)
 

@@ -85,7 +85,7 @@ const bnb = {
     ptyProcess.write('./'+config.fileName+' keys add '+name+'\r');
   },
 
-  issue(tokenName, totalSupply, symbol, keyName, password, callback) {
+  issue(tokenName, totalSupply, symbol, mintable, keyName, password, callback) {
     const ptyProcess = bnb.spawnProcess()
 
     ptyProcess.on('data', function(data) {
@@ -110,8 +110,10 @@ const bnb = {
       }
     });
 
+    const mintableString = mintable ? ' --mintable' : ''
+
     ptyProcess.write('cd '+config.filePath+'\r');
-    ptyProcess.write('./'+config.fileName+' token issue --token-name "'+tokenName+'" --total-supply '+totalSupply+' --symbol '+symbol+' --from '+keyName+' --chain-id='+config.chainID+' --node='+config.nodeData+' --trust-node\r');
+    ptyProcess.write('./'+config.fileName+' token issue --token-name "'+tokenName+'" --total-supply '+totalSupply+' --symbol '+symbol+''+mintableString+' --from '+keyName+' --chain-id='+config.chainID+' --node='+config.nodeData+' --trust-node\r');
   },
 
   mint(amount, symbol, keyName, callback) {

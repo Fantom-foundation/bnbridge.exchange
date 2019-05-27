@@ -6,6 +6,7 @@ import {
   Typography
 } from "@material-ui/core"
 
+import Checkbox from "../common/checkbox";
 import Input from "../common/input";
 import Button from "../common/button";
 
@@ -87,6 +88,8 @@ class Issue extends Component {
     symbolError: false,
     totalSupply: '',
     totalSupplyError: false,
+    mintable: false,
+    mintableError: false,
   };
 
   componentWillMount() {
@@ -124,16 +127,20 @@ class Issue extends Component {
       symbol,
       erc20address,
       totalSupply,
+      mintable,
     } = this.state
 
     const content = {
       erc20_address: erc20address,
       name: tokenName,
       symbol: symbol,
-      total_supply: totalSupply
+      total_supply: totalSupply,
+      mintable: mintable
     }
 
-    dispatcher.dispatch({type: ISSUE_TOKEN, content })
+    console.log(content)
+
+    // dispatcher.dispatch({type: ISSUE_TOKEN, content })
   };
 
   callFinalizeToken = () => {
@@ -152,14 +159,14 @@ class Issue extends Component {
       tokenNameError: false,
       symbolError: false,
       erc20addressError: false,
-      totalSupplyError: false
+      totalSupplyError: false,
     })
 
     const {
       tokenName,
       symbol,
       erc20address,
-      totalSupply,
+      totalSupply
     } = this.state
 
     let error = false
@@ -212,6 +219,12 @@ class Issue extends Component {
     this.setState(val)
   };
 
+  onSelectChange = (event) => {
+    let val = []
+    val[event.target.id] = event.target.checked
+    this.setState(val)
+  }
+
   renderPage0() {
     const { classes } = this.props
     const {
@@ -222,7 +235,9 @@ class Issue extends Component {
       symbol,
       symbolError,
       totalSupply,
-      totalSupplyError
+      totalSupplyError,
+      mintable,
+      mintableError
     } = this.state
 
     return (
@@ -269,6 +284,16 @@ class Issue extends Component {
             value={ totalSupply }
             error={ totalSupplyError }
             onChange={ this.onChange }
+          />
+        </Grid>
+        <Grid item xs={ 12 }>
+          <Checkbox
+            id="mintable"
+            fullWidth={ true }
+            label="Mintable"
+            value={ mintable }
+            error={ mintableError }
+            onChange={ this.onSelectChange }
           />
         </Grid>
         <Grid item xs={ 12 }>
