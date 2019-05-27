@@ -76,7 +76,8 @@ class AssetSelection extends Component {
   render() {
     const {
       classes,
-      onIssue
+      onIssue,
+      disabled
     } = this.props
 
     const {
@@ -97,11 +98,13 @@ class AssetSelection extends Component {
             value={ token }
             error={ tokenError }
             handleChange={ this.onSelectChange }
+            disabled={ disabled }
           />
         </Grid>
         <Grid item xs={ 3 } className={ classes.container }>
           <Button
             label="Issue"
+            disabled={ disabled }
             onClick={ onIssue }
           />
         </Grid>

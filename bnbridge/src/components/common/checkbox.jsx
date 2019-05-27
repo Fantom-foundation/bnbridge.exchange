@@ -27,7 +27,8 @@ function StyledCheckbox(props) {
     fullWidth,
     value,
     onChange,
-    error
+    error,
+    disabled
   } = props;
 
   return (
@@ -40,6 +41,7 @@ function StyledCheckbox(props) {
         checked={ value }
         onChange={ onChange }
         value={ id }
+        disabled={ disabled }
       />
     </FormControl>
   )
@@ -52,6 +54,7 @@ StyledCheckbox.propTypes = {
   id: PropTypes.string,
   defaultValue: PropTypes.string,
   fullWidth: PropTypes.bool,
+  disabled: PropTypes.bool,
   value: PropTypes.string,
   onChange: PropTypes.func,
 };

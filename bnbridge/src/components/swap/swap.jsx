@@ -8,6 +8,7 @@ import {
 
 import Input from '../common/input';
 import Button from '../common/button';
+import PageLoader from "../common/pageLoader";
 import AssetSelection from "../assetSelection";
 
 import {
@@ -63,6 +64,7 @@ const styles = theme => ({
 
 class Swap extends Component {
   state = {
+    loading: false,
     page: 0,
     token: '',
     tokenError: false,
@@ -74,7 +76,9 @@ class Swap extends Component {
     amountError: false,
     amountErrorMessage: '',
     amountHelperText: '',
-    tokens: []
+    tokens: [],
+    selectedToken: null,
+    receiveAmount: null
   };
 
   componentWillMount() {
@@ -101,6 +105,7 @@ class Swap extends Component {
 
   error = (err) => {
     this.props.showError(err)
+    this.setState({ loading: false })
   }
 
   tokenSwapped = (data) => {
@@ -108,12 +113,13 @@ class Swap extends Component {
       page: 1,
       swapUuid: data.swap_uuid,
       ethDepositAddress: data.eth_address,
-      symbol: data.symbol
+      symbol: data.symbol,
+      loading: false
    })
   };
 
   tokenSwapFinalized = (data) => {
-    this.setState({ page: 2 })
+    this.setState({ page: 2, loading: false })
   };
 
   callSwapToken = () => {
@@ -132,6 +138,8 @@ class Swap extends Component {
       amount: amount
     }
     dispatcher.dispatch({type: SWAP_TOKEN, content })
+
+    this.setState({ loading: true })
   };
 
   callFinalizeSwapToken = () => {
@@ -143,6 +151,8 @@ class Swap extends Component {
       uuid: swapUuid,
     }
     dispatcher.dispatch({type: FINALIZE_SWAP_TOKEN, content })
+
+    this.setState({ loading: true })
   };
 
   validateSwapToken = () => {
@@ -229,6 +239,10 @@ class Swap extends Component {
       erc20AddressError: false,
       amount: '',
       amountError: false,
+      amountErrorMessage: '',
+      amountHelperText: '',
+      selectedToken: null,
+      receiveAmount: null
     })
   };
 
@@ -239,7 +253,8 @@ class Swap extends Component {
   onTokenSelected = (value) => {
 
     const {
-      tokens
+      tokens,
+      amount
     } = this.state
 
     let theToken = tokens.filter((tok) => {
@@ -252,15 +267,39 @@ class Swap extends Component {
       if(theToken[0].minimum_swap_amount != null) {
         amountHelperText = 'Minimum amount is '+theToken[0].minimum_swap_amount+' '+theToken[0].symbol
       }
+
+      if(theToken[0].fee_per_swap != null && amount) {
+        this.setState({ receiveAmount: parseFloat(amount) - parseFloat(theToken[0].fee_per_swap)  })
+      } else if (theToken[0].fee_per_swap == null && amount) {
+        this.setState({ receiveAmount: parseFloat(amount) })
+      } else {
+        this.setState({ receiveAmount: '' })
+      }
     }
 
-    this.setState({ token: value, amountHelperText: amountHelperText })
+    this.setState({ token: value, selectedToken: theToken[0], amountHelperText: amountHelperText })
   };
 
   onChange = (event) => {
     let val = []
     val[event.target.id] = event.target.value
     this.setState(val)
+
+    if(event.target.id === 'amount') {
+      const {
+        selectedToken
+      } = this.state
+
+      if(selectedToken != null) {
+        if(selectedToken.fee_per_swap != null) {
+          this.setState({ receiveAmount: parseFloat(event.target.value) - parseFloat(selectedToken.fee_per_swap)  })
+        } else {
+          this.setState({ receiveAmount: parseFloat(event.target.value) })
+        }
+      } else {
+        this.setState({ receiveAmount: '' })
+      }
+    }
   };
 
   renderPage0 = () => {
@@ -274,6 +313,9 @@ class Swap extends Component {
       amountError,
       amountErrorMessage,
       amountHelperText,
+      receiveAmount,
+      selectedToken,
+      loading
     } = this.state
 
     const {
@@ -283,7 +325,7 @@ class Swap extends Component {
 
     return (
       <React.Fragment>
-        <AssetSelection onIssue={ onIssue } onTokenSelected={ this.onTokenSelected } />
+        <AssetSelection onIssue={ onIssue } onTokenSelected={ this.onTokenSelected } disabled={ loading } />
         <Grid item xs={ 12 }>
           <Input
             id='bnbAddress'
@@ -293,6 +335,7 @@ class Swap extends Component {
             value={ bnbAddress }
             error={ bnbAddressError }
             onChange={ this.onChange }
+            disabled={ loading }
           />
         </Grid>
         <Grid item xs={ 12 }>
@@ -304,6 +347,7 @@ class Swap extends Component {
             value={ erc20address }
             error={ erc20AddressError }
             onChange={ this.onChange }
+            disabled={ loading }
           />
         </Grid>
         <Grid item xs={ 12 }>
@@ -316,10 +360,13 @@ class Swap extends Component {
             error={ amountError }
             onChange={ this.onChange }
             helpertext={ amountErrorMessage && amountErrorMessage !== '' ? amountErrorMessage : amountHelperText }
+            disabled={ loading }
           />
         </Grid>
         <Grid item xs={ 12 }>
-          <Typography className={ classes.disclaimer }>By swapping a token here, you agree to bnbridge's Terms of Service.</Typography>
+          {
+            receiveAmount && <Typography className={ classes.disclaimer }>You will receive {receiveAmount} {selectedToken.symbol}-BEP2</Typography>
+          }
         </Grid>
       </React.Fragment>
     )
@@ -391,11 +438,13 @@ class Swap extends Component {
     } = this.props
 
     const {
-      page
+      page,
+      loading
     } = this.state
 
     return (
       <Grid container className={ classes.root }>
+        { loading && <PageLoader /> }
         { page === 0 && this.renderPage0() }
         { page === 1 && this.renderPage1() }
         { page === 2 && this.renderPage2() }
@@ -403,13 +452,15 @@ class Swap extends Component {
           <Grid item xs={ 6 } align='left' className={ classes.button }>
             <Button
               label="Back"
+              disabled={ loading }
               onClick={ this.onBack }
             />
           </Grid>
         }
         <Grid item xs={ page > 0 ? 6 : 12 } align='right' className={ classes.button }>
           <Button
-            label={page === 2 ? "Done" : "Next"}
+            label={ page === 2 ? "Done" : "Next" }
+            disabled={ loading }
             onClick={ this.onNext }
           />
         </Grid>

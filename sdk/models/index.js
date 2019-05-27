@@ -587,11 +587,25 @@ const models = {
 
                     console.log('KEY')
                     console.log(key)
-                    bnb.transfer(key.mnemonic, swapInfo.bnb_address, swapInfo.amount, tokenInfo.unique_symbol, 'BNBridge Swap', (err, swapResult) => {
+
+                    let transferAmount = swapInfo.amount
+
+                    if(tokenInfo.fee_per_swap && tokenInfo.fee_per_swap != '') {
+                      transferAmount = parseFloat(swapInfo.amount) - parseFloat(tokenInfo.fee_per_swap)
+                    }
+
+                    bnb.transfer(key.mnemonic, swapInfo.bnb_address, transferAmount, tokenInfo.unique_symbol, 'BNBridge Swap', (err, swapResult) => {
                       if(err) {
                         console.log(err)
                         res.status(500)
                         res.body = { 'status': 500, 'success': false, 'result': err }
+
+                        models.revertUpdateWithDepositTransactionHash(swapInfo.uuid, acceptableTransactions[0].transactionHash, (err) => {
+                          if(err) {
+                            console.log(err)
+                          }
+                        })
+
                         return next(null, req, res, next)
                       }
 
@@ -662,6 +676,12 @@ const models = {
 
   updateWithDepositTransactionHash(uuid, hash, callback) {
     db.none('update swaps set deposit_transaction_hash = $2 where uuid = $1;', [uuid, hash])
+    .then(callback)
+    .catch(callback)
+  },
+
+  revertUpdateWithDepositTransactionHash(uuid, hash, callback) {
+    db.none('update swaps set deposit_transaction_hash = null where uuid = $1 and deposit_transaction_hash = $2 and transfer_transaction_hash is null;', [uuid, hash])
     .then(callback)
     .catch(callback)
   },

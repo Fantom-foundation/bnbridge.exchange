@@ -19,7 +19,8 @@ function StyledButton(props) {
     classes,
     label,
     fullWidth,
-    onClick
+    onClick,
+    disabled
   } = props;
 
   return (
@@ -28,6 +29,7 @@ function StyledButton(props) {
         fullWidth={ fullWidth }
         variant="outlined"
         color="primary"
+        disabled={ disabled }
         onClick={ onClick }>
         {label}
       </Button>
@@ -38,7 +40,8 @@ StyledButton.propTypes = {
   classes: PropTypes.object.isRequired,
   label: PropTypes.string.isRequired,
   onClick: PropTypes.func,
-  fullWidth: PropTypes.bool
+  fullWidth: PropTypes.bool,
+  disabled: PropTypes.bool
 };
 
 export default withStyles(styles)(StyledButton);

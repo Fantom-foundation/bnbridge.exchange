@@ -24,7 +24,8 @@ function StyledSelect(props) {
     value,
     handleChange,
     fullWidth,
-    options
+    options,
+    disabled
   } = props;
 
   return (
@@ -34,6 +35,7 @@ function StyledSelect(props) {
         native
         value={ value }
         onChange={ handleChange }
+        disabled={ disabled }
         fullWidth
         input={
           <OutlinedInput
@@ -60,7 +62,8 @@ StyledSelect.propTypes = {
   id: PropTypes.string,
   value: PropTypes.string,
   handleChange: PropTypes.func,
-  fullWidth: PropTypes.bool
+  fullWidth: PropTypes.bool,
+  disabled: PropTypes.bool
 };
 
 export default withStyles(styles)(StyledSelect);

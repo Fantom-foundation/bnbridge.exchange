@@ -29,7 +29,8 @@ function StyledInput(props) {
     fullWidth,
     value,
     onChange,
-    error
+    error,
+    disabled
   } = props;
 
   console.log(helpertext)
@@ -45,6 +46,7 @@ function StyledInput(props) {
         labelWidth={ 0 }
         value={ value }
         onChange={ onChange }
+        disabled={ disabled }
       />
     { helpertext && <FormHelperText>{helpertext}</FormHelperText> }
     </FormControl>
@@ -59,6 +61,7 @@ StyledInput.propTypes = {
   id: PropTypes.string,
   defaultValue: PropTypes.string,
   fullWidth: PropTypes.bool,
+  disabled: PropTypes.bool,
   value: PropTypes.string,
   onChange: PropTypes.func,
 };
