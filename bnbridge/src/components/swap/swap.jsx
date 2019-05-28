@@ -65,7 +65,8 @@ const styles = theme => ({
   },
   disclaimer: {
     fontSize: '16px',
-    marginTop: '24px'
+    marginTop: '24px',
+    lineHeight: '42px',
   },
 });
 
@@ -384,11 +385,6 @@ class Swap extends Component {
             disabled={ loading }
           />
         </Grid>
-        <Grid item xs={ 12 }>
-          {
-            receiveAmount && <Typography className={ classes.disclaimer }>You will receive {receiveAmount} {selectedToken.symbol}-BEP2</Typography>
-          }
-        </Grid>
       </React.Fragment>
     )
   };
@@ -412,7 +408,7 @@ class Swap extends Component {
             Here's what you need to do next:
           </Typography>
           <Typography className={ classes.instructionBold }>
-            Transfer {amount} {symbol}
+            Transfer {amount} {symbol}-ERC20
           </Typography>
           <Typography className={ classes.instructions }>
             from
@@ -467,7 +463,9 @@ class Swap extends Component {
 
     const {
       page,
-      loading
+      loading,
+      receiveAmount,
+      selectedToken
     } = this.state
 
     return (
@@ -477,7 +475,7 @@ class Swap extends Component {
         { page === 1 && this.renderPage1() }
         { page === 2 && this.renderPage2() }
         { page > 0 &&
-          <Grid item xs={ 6 } align='left' className={ classes.button }>
+          <Grid item xs={ 8 } align='left' className={ classes.button }>
             <Button
               label="Back"
               disabled={ loading }
@@ -485,7 +483,13 @@ class Swap extends Component {
             />
           </Grid>
         }
-        <Grid item xs={ page > 0 ? 6 : 12 } align='right' className={ classes.button }>
+        {
+            (page === 0 && receiveAmount > 0) &&
+            <Grid item xs={ 8 }>
+              <Typography className={ classes.disclaimer }>You will receive {receiveAmount} {selectedToken.symbol}-BEP2</Typography>
+            </Grid>
+        }
+        <Grid item xs={ (page > 0 || receiveAmount > 0) ? 4 : 12 } align='right' className={ classes.button }>
           <Button
             label={ page === 2 ? "Done" : "Next" }
             disabled={ loading }
