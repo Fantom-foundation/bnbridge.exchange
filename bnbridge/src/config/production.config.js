@@ -1,6 +1,7 @@
 const config = {
   apiUrl: "",
-  apiToken : ""
+  apiToken : "",
+  explorerURL: ""
 };
 
 export default config;

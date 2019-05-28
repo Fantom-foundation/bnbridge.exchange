@@ -12,6 +12,7 @@ const config = {
   nodeData: "data-seed-pre-2-s1.binance.org:80",
   nodeHTTPS: "https://seed-pre-s3.binance.org:443",
   keyPrepend: "TEST_",
+  list_proposal_deposit: "200000000000",
 
   //Ethereum
   provider: 'https://ropsten.infura.io/v3/2b1dbb61817f4ae6ac90d9b41662993b',

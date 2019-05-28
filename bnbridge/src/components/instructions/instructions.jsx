@@ -12,7 +12,6 @@ import {
 } from '../../constants'
 
 import Store from "../../stores";
-const dispatcher = Store.dispatcher
 const emitter = Store.emitter
 const store = Store.store
 
@@ -68,17 +67,17 @@ class Instructions extends Component {
         case 'send':
           description = 'Transfer Tokens'
           break;
+        case 'list_proposal_deposit':
+          description = 'Listing Proposal Deposit'
+          break;
+        default:
+          break;
       }
 
       return {
         description: description,
         price: fee.fee/100000000
       }
-    })
-
-    feesDisplay.push({
-      description: 'Listing Proposal Deposit',
-      price: 2000
     })
 
     this.setState({

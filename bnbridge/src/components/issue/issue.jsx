@@ -138,9 +138,7 @@ class Issue extends Component {
       mintable: mintable
     }
 
-    console.log(content)
-
-    // dispatcher.dispatch({type: ISSUE_TOKEN, content })
+    dispatcher.dispatch({type: ISSUE_TOKEN, content })
   };
 
   callFinalizeToken = () => {

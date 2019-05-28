@@ -289,7 +289,7 @@ class List extends Component {
       expiryTime: '',
       expiryTimeError: false,
       votingPeriod: '',
-      votingPeriod: false,
+      votingPeriodError: false,
       initialPrice: '',
       initialPriceError: false,
     })

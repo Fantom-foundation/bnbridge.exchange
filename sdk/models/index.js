@@ -391,6 +391,8 @@ const models = {
         }
       })
 
+      fees.push({ msg_type: 'list_proposal_deposit', fee: config.list_proposal_deposit })
+
       res.status(205)
       res.body = { 'status': 200, 'success': true, 'result': fees }
       return next(null, req, res, next)
@@ -667,7 +669,7 @@ const models = {
   },
 
   getTransactionHashs(ethAddress, erc20Address, callback) {
-    db.manyOrNone('select * from swaps where eth_address = $1 and token_uuid = (select uuid from tokens where erc20_address = $2);', [ethAddress, erc20Address])
+    db.manyOrNone('select * from swaps where eth_address = $1 and token_uuid in (select uuid from tokens where erc20_address = $2);', [ethAddress, erc20Address])
     .then((response) => {
       callback(null, response)
     })

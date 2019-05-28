@@ -5,6 +5,7 @@ import {
   Grid,
   Typography
 } from '@material-ui/core'
+import config from '../../config'
 
 import Input from '../common/input';
 import Button from '../common/button';
@@ -55,8 +56,15 @@ const styles = theme => ({
     textAlign: 'center',
     marginBottom: '16px'
   },
+  hash: {
+    fontSize: '0.8rem',
+    textAlign: 'center',
+    marginBottom: '16px',
+    maxWidth: '100%',
+    cursor: 'pointer'
+  },
   disclaimer: {
-    fontSize: '12px',
+    fontSize: '16px',
     marginTop: '24px'
   },
 });
@@ -118,8 +126,13 @@ class Swap extends Component {
    })
   };
 
-  tokenSwapFinalized = (data) => {
-    this.setState({ page: 2, loading: false })
+  tokenSwapFinalized = (transactionHash) => {
+    console.log(transactionHash)
+    this.setState({
+      page: 2,
+      loading: false,
+      transactionHash: transactionHash
+    })
   };
 
   callSwapToken = () => {
@@ -248,6 +261,14 @@ class Swap extends Component {
 
   onBack = (event) => {
     this.setState({ page: 0 })
+  };
+
+  onHashClick = (event) => {
+    const {
+      transactionHash
+    } = this.state
+
+    window.open(config.explorerURL+transactionHash, "_blank")
   };
 
   onTokenSelected = (value) => {
@@ -418,14 +439,21 @@ class Swap extends Component {
       classes
     } = this.props
 
+    const {
+      transactionHash
+    } = this.state
+
     return (
       <React.Fragment>
         <Grid item xs={ 12 } className={ classes.frame }>
           <Typography className={ classes.instructionBold }>
-            Awesome
+            Swap completed
           </Typography>
           <Typography className={ classes.instructions }>
-            Your transaction was successfull.
+            Your transaction was successfull. You can view the swap transaction by clicking on the transaction hash below.
+          </Typography>
+          <Typography className={ classes.hash } onClick={ this.onHashClick } noWrap>
+            {transactionHash}
           </Typography>
         </Grid>
       </React.Fragment>

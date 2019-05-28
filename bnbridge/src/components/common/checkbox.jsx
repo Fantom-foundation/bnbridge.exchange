@@ -22,7 +22,6 @@ function StyledCheckbox(props) {
     classes,
     helpertext,
     id,
-    defaultValue,
     label,
     fullWidth,
     value,
