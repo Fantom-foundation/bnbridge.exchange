@@ -4,12 +4,13 @@ export const colors = {
   yellow: "#f5bc00",
   gray: "#e1e1e1",
   lightGray: "#fafafa",
-  lightBlack: "#141414"
+  lightBlack: "#6a6a6a"
 };
 
 const bnbridgeTheme =  {
   typography: {
-    fontFamily: ['Roboto', 'sans-serif'].join(","),
+    fontFamily: ['Lato', 'Roboto', 'Open Sans', 'sans-serif'].join(","),
+    lineHeight: 1.45,
     useNextVariants: true,
     h6: {
       fontSize: '0.8rem',
@@ -25,6 +26,9 @@ const bnbridgeTheme =  {
         background: colors.lightGray
       }
     },
+    MuiGrid: {
+      paddingLeft: '10px',
+    },
     MuiOutlinedInput: {
       input: {
         padding: '14px'
@@ -32,7 +36,7 @@ const bnbridgeTheme =  {
     },
     MuiPrivateNotchedOutline: {
       root: {
-        borderRadius: '3px'
+        borderRadius: '0px'
       }
     },
     MuiButton: {
@@ -41,12 +45,16 @@ const bnbridgeTheme =  {
       }
     },
     MuiTab: {
-      textColorPrimary: {
-        color: colors.yellow,
-        "&$selected": {
-          color: colors.yellow
-        }
+      label: {
+        fontWeight: 700,
+      },
+      selected: {
+        color: colors.yellow
+      },
+      root: {
+        borderBottom: "1px solid #dee2e6!important"
       }
+
     },
   },
   palette: {
