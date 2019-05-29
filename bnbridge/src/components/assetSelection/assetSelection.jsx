@@ -34,7 +34,7 @@ class AssetSelection extends Component {
     tokens: null,
     tokenOptions: []
   };
-  
+
   componentWillMount() {
     emitter.on(TOKENS_UPDATED, this.tokensUpdated);
     dispatcher.dispatch({type: GET_TOKENS, content: {} })
@@ -49,7 +49,7 @@ class AssetSelection extends Component {
     const tokenOptions = tokens.map((token) => {
       return {
         value: token.uuid,
-        description: token.name
+        description: token.name + " ("+token.symbol+")"
       }
     })
 

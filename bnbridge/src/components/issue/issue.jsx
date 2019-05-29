@@ -377,6 +377,7 @@ class Issue extends Component {
         </Grid>
         <Grid item xs={ 6 } align="right" className={ classes.button }>
           <Button
+            fullWidth={true}
             label="Next"
             onClick={ this.onNext }
           />
