@@ -11,8 +11,8 @@ var ptyProcess = pty.spawn(shell, [], {
   env: process.env
 });
 
-const KEY_NAME = "anton_key"
-const PASSWORD = "123123123"
+const KEY_NAME = "key"
+const PASSWORD = ""
 const PATH = "c:/opt/fantom/fantom-binance/cli/node-binary/cli/testnet/0.5.8.1/windows/"
 const FILE = "tbnbcli.exe"
 

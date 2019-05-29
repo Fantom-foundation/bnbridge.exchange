@@ -14,16 +14,15 @@ var ptyProcess = pty.spawn(shell, [], {
 const TOKEN_NAME = "TEST TOKEN"
 const TOTAL_SUPPLY = "100000000000000"
 const SYMBOL = 'TST'
-const KEY_NAME = 'TST_key'
+const KEY_NAME = 'key'
 const PATH = "c:/opt/fantom/fantom-binance/cli/node-binary/cli/testnet/0.5.8.1/windows/"
 const FILE = "tbnbcli.exe"
-const PASSWORD = "B80lOyCPvdWqoquTUVla"
+const PASSWORD = ""
 
 ptyProcess.on('data', function(data) {
   process.stdout.write(data);
 
   if(data.includes("Committed")) {
-    console.log("************************************************************ WE NEED TO EXIT NOW RIGHT?????? ***************************************************************")
 
     let index = data.indexOf('Issued '+SYMBOL)
     data.substr(index+7, 7)
