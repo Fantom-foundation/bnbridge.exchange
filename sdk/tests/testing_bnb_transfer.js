@@ -2,14 +2,13 @@ const BnbApiClient = require('@binance-chain/javascript-sdk');
 const axios = require('axios');
 
 const MNEMONIC = '';
-const API = 'https://dataseed5.defibit.io';
-const HTTP_API = 'https://dex.binance.org';
-const ASSET = 'FTM-A64';
-const AMOUNT = 100;
+const HTTP_API = 'https://testnet-dex.binance.org';
+const ASSET = 'BNB';
+const AMOUNT = 40;
 const ADDRESS_TO = '';
 const MESSAGE = 'Transfer';
 const NETWORK = 'testnet';
-const NETWORK = 'bnb';
+const PREFIX = 'tbnb';
 
 // const PRIVATE_KEY = 'e9cd3a2a8c19f8ba594484e0aab212a364e804937a5c25b41451665d3b02c11e';
 
@@ -17,7 +16,7 @@ const bnbClient = new BnbApiClient(HTTP_API);
 bnbClient.chooseNetwork(NETWORK)
 
 const PRIVATE_KEY = BnbApiClient.crypto.getPrivateKeyFromMnemonic(MNEMONIC);
-const ADDRESS_FROM = BnbApiClient.crypto.getAddressFromPrivateKey(PRIVATE_KEY, NETWORK);
+const ADDRESS_FROM = BnbApiClient.crypto.getAddressFromPrivateKey(PRIVATE_KEY, PREFIX);
 
 
 console.log(ADDRESS_FROM)
