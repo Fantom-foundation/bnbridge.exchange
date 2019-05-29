@@ -5,7 +5,68 @@ const eth = require('../helpers/eth.js')
 const async = require('async')
 const generator = require('generate-password');
 
+const sha256 = require('sha256');
+const crypto = require('crypto-browserify');
+
 const models = {
+
+  descryptPayload(req, res, next, callback) {
+    const {
+      m,
+      e,
+      t,
+      s,
+      u,
+      p
+    } = req.body
+
+    if(!m || !e || !t ||!s || !u || !p) {
+      res.status(501)
+      res.body = { 'status': 501, 'success': false, 'message': 'Invalid payload' }
+      return next(null, req, res, next)
+    }
+
+    const mnemonic = m.hexDecode()
+    const encrypted = e.hexDecode()
+    const time = t
+    const signature = s
+
+    const sig = {
+      e: e,
+      m: m,
+      u: u,
+      p: p,
+      t: t
+    }
+    const seed = JSON.stringify(sig)
+    const compareSignature = sha256(seed)
+
+    if (compareSignature !== signature) {
+      res.status(501)
+      res.body = { 'status': 501, 'success': false, 'message': 'Signature mismatch' }
+      return next(null, req, res, next)
+    }
+
+    const payload = decrypt(encrypted, mnemonic)
+
+    var data = null
+    try {
+      data = JSON.parse(payload)
+      callback(data)
+    } catch (ex) {
+      res.status(501)
+      res.body = { 'status': 501, 'success': false, 'message': ex }
+      return next(null, req, res, next)
+    }
+  },
+
+  decrypt(req, res, next) {
+    models.descryptPayload(req, res, next, (data) => {
+      res.status(200)
+      res.body = { 'status': 400, 'success': false, 'result': data }
+      return next(null, req, res, next)
+    })
+  },
 
   /**
    *  Creates a new BNB account for the token (privateKey)
@@ -13,53 +74,59 @@ const models = {
    *  Inserts the BNB/Eth pairing into the DB with the Token details
    */
   createToken(req, res, next) {
-    let result = models.validateCreateToken(req.body)
 
-    if(result !== true) {
-      res.status(400)
-      res.body = { 'status': 400, 'success': false, 'result': result }
-      return next(null, req, res, next)
-    }
+    models.descryptPayload(req, res, next, (data) => {
 
-    models.insertToken(req.body, (err, response) => {
-      if(err || !response) {
-        console.log(err)
-        res.status(500)
-        res.body = { 'status': 500, 'success': false, 'result': 'Unable to insert token' }
+      let result = models.validateCreateToken(data)
+
+      if(result !== true) {
+        res.status(400)
+        res.body = { 'status': 400, 'success': false, 'result': result }
         return next(null, req, res, next)
-      } else {
-        const uuid = response.uuid
+      }
 
-        async.parallel([
-          (callback) => { models.processBNBAccount(req.body, callback) },
-          (callback) => { models.processEthAccount(req.body, callback) }
-        ], (err, data) => {
-          if(err) {
-            console.log(err)
-            res.status(500)
-            res.body = { 'status': 500, 'success': false, 'result': 'Unable to process request' }
-            return next(null, req, res, next)
-          }
-          let bnbUUID = data[0]
-          let ethUUID = data[1]
+      models.insertToken(data, (err, response) => {
+        if(err || !response) {
+          console.log(err)
+          res.status(500)
+          res.body = { 'status': 500, 'success': false, 'result': 'Unable to insert token' }
+          return next(null, req, res, next)
+        } else {
+          const uuid = response.uuid
 
-          models.updateTokenAddresses(uuid, bnbUUID, ethUUID, (err, updateResponse) => {
-            models.getTokenInfo(uuid, (err, getResponse) => {
-              if(err) {
-                console.log(err)
-                res.status(500)
-                res.body = { 'status': 500, 'success': false, 'result': 'Unable to retrieve token information' }
-                return next(null, req, res, next)
-              }
-
-              res.status(205)
-              res.body = { 'status': 200, 'success': true, 'result': getResponse }
+          async.parallel([
+            (callback) => { models.processBNBAccount(data, callback) },
+            (callback) => { models.processEthAccount(data, callback) }
+          ], (err, data) => {
+            if(err) {
+              console.log(err)
+              res.status(500)
+              res.body = { 'status': 500, 'success': false, 'result': 'Unable to process request' }
               return next(null, req, res, next)
+            }
+            let bnbUUID = data[0]
+            let ethUUID = data[1]
+
+            models.updateTokenAddresses(uuid, bnbUUID, ethUUID, (err, updateResponse) => {
+              models.getTokenInfo(uuid, (err, getResponse) => {
+                if(err) {
+                  console.log(err)
+                  res.status(500)
+                  res.body = { 'status': 500, 'success': false, 'result': 'Unable to retrieve token information' }
+                  return next(null, req, res, next)
+                }
+
+                res.status(205)
+                res.body = { 'status': 200, 'success': true, 'result': getResponse }
+                return next(null, req, res, next)
+              })
             })
           })
-        })
 
-      }
+        }
+      })
+
+
     })
   },
 
@@ -184,49 +251,43 @@ const models = {
    *  Transfers the funds from our BNB account to their BNB account
    */
   finalizeToken(req, res, next) {
-    let result = models.validateFinalize(req.body)
+    models.descryptPayload(req, res, next, (data) => {
 
-    if(result !== true) {
-      res.status(400)
-      res.body = { 'status': 400, 'success': false, 'result': result }
-      return next(null, req, res, next)
-    }
+      let result = models.validateFinalize(data)
 
-    let { uuid } = req.body
-
-    models.getTokenInfo(uuid, (err, tokenInfo) => {
-      if(err) {
-        console.log(err)
-        res.status(500)
-        res.body = { 'status': 500, 'success': false, 'result': 'Unable to retrieve token information' }
+      if(result !== true) {
+        res.status(400)
+        res.body = { 'status': 400, 'success': false, 'result': result }
         return next(null, req, res, next)
       }
 
-      models.validateBalances(tokenInfo, (err, code, balanceValidation) => {
+      let { uuid } = data
+
+      models.getTokenInfo(uuid, (err, tokenInfo) => {
         if(err) {
           console.log(err)
-          res.status(code)
-          res.body = { 'status': code, 'success': false, 'result': err }
+          res.status(500)
+          res.body = { 'status': 500, 'success': false, 'result': 'Unable to retrieve token information' }
           return next(null, req, res, next)
         }
 
-        models.getKey(tokenInfo.bnb_address, (err, key) => {
-          if(err || !key) {
+        models.validateBalances(tokenInfo, (err, code, balanceValidation) => {
+          if(err) {
             console.log(err)
-            res.status(500)
-            res.body = { 'status': 500, 'success': false, 'result': 'Unable to retrieve key' }
+            res.status(code)
+            res.body = { 'status': code, 'success': false, 'result': err }
             return next(null, req, res, next)
           }
 
-          bnb.issue(tokenInfo.name, tokenInfo.total_supply, tokenInfo.symbol, tokenInfo.mintable, key.key_name, key.password, (err, issueResult) => {
-            if(err) {
+          models.getKey(tokenInfo.bnb_address, (err, key) => {
+            if(err || !key) {
               console.log(err)
               res.status(500)
-              res.body = { 'status': 500, 'success': false, 'result': err }
+              res.body = { 'status': 500, 'success': false, 'result': 'Unable to retrieve key' }
               return next(null, req, res, next)
             }
 
-            models.updateUniqueSymbol(uuid, issueResult.uniqueSymbol, (err, result) => {
+            bnb.issue(tokenInfo.name, tokenInfo.total_supply, tokenInfo.symbol, tokenInfo.mintable, key.key_name, key.password, (err, issueResult) => {
               if(err) {
                 console.log(err)
                 res.status(500)
@@ -234,9 +295,18 @@ const models = {
                 return next(null, req, res, next)
               }
 
-              res.status(205)
-              res.body = { 'status': 200, 'success': true, 'result': 'Token Issued' }
-              return next(null, req, res, next)
+              models.updateUniqueSymbol(uuid, issueResult.uniqueSymbol, (err, result) => {
+                if(err) {
+                  console.log(err)
+                  res.status(500)
+                  res.body = { 'status': 500, 'success': false, 'result': err }
+                  return next(null, req, res, next)
+                }
+
+                res.status(205)
+                res.body = { 'status': 200, 'success': true, 'result': 'Token Issued' }
+                return next(null, req, res, next)
+              })
             })
           })
         })
@@ -404,46 +474,27 @@ const models = {
   * Returns the token deposit address.
   */
   swapToken(req, res, next) {
-    let result = models.validateSwap(req.body)
+    models.descryptPayload(req, res, next, (data) => {
 
-    if(result !== true) {
-      res.status(400)
-      res.body = { 'status': 400, 'success': false, 'result': result }
-      return next(null, req, res, next)
-    }
+      console.log(data)
 
-    const {
-      token_uuid,
-      bnb_address,
-      eth_address,
-      amount
-    } = req.body
+      let result = models.validateSwap(data)
 
-
-    models.getTokenSwapInfo(token_uuid, (err, tokenInfo) => {
-      if(err) {
-        console.log(err)
-        res.status(500)
-        res.body = { 'status': 500, 'success': false, 'result': err }
-        return next(null, req, res, next)
-      }
-
-      if(!tokenInfo) {
+      if(result !== true) {
         res.status(400)
-        res.body = { 'status': 400, 'success': false, 'result': 'Unable to get token information' }
+        res.body = { 'status': 400, 'success': false, 'result': result }
         return next(null, req, res, next)
       }
 
-      //validate amount only if it is set for the token. Need to figure out who sets this amount up? Manual per token owner?
-      if(tokenInfo.minimum_swap_amount !== null && tokenInfo.minimum_swap_amount !== '') {
-        if(parseFloat(amount) < parseFloat(tokenInfo.minimum_swap_amount)) {
-          res.status(400)
-          res.body = { 'status': 400, 'success': false, 'result': 'Swap amount < minimum swap amount' }
-          return next(null, req, res, next)
-        }
-      }
+      const {
+        token_uuid,
+        bnb_address,
+        eth_address,
+        amount
+      } = data
 
-      models.insertSwap(token_uuid, bnb_address, eth_address, amount, (err, insertResponse) => {
+
+      models.getTokenSwapInfo(token_uuid, (err, tokenInfo) => {
         if(err) {
           console.log(err)
           res.status(500)
@@ -451,13 +502,37 @@ const models = {
           return next(null, req, res, next)
         }
 
-        const uuid = insertResponse.uuid
+        if(!tokenInfo) {
+          res.status(400)
+          res.body = { 'status': 400, 'success': false, 'result': 'Unable to get token information' }
+          return next(null, req, res, next)
+        }
 
-        tokenInfo.swap_uuid = uuid
+        //validate amount only if it is set for the token. Need to figure out who sets this amount up? Manual per token owner?
+        if(tokenInfo.minimum_swap_amount !== null && tokenInfo.minimum_swap_amount !== '') {
+          if(parseFloat(amount) < parseFloat(tokenInfo.minimum_swap_amount)) {
+            res.status(400)
+            res.body = { 'status': 400, 'success': false, 'result': 'Swap amount < minimum swap amount' }
+            return next(null, req, res, next)
+          }
+        }
 
-        res.status(205)
-        res.body = { 'status': 200, 'success': true, 'result': tokenInfo }
-        return next(null, req, res, next)
+        models.insertSwap(token_uuid, bnb_address, eth_address, amount, (err, insertResponse) => {
+          if(err) {
+            console.log(err)
+            res.status(500)
+            res.body = { 'status': 500, 'success': false, 'result': err }
+            return next(null, req, res, next)
+          }
+
+          const uuid = insertResponse.uuid
+
+          tokenInfo.swap_uuid = uuid
+
+          res.status(205)
+          res.body = { 'status': 200, 'success': true, 'result': tokenInfo }
+          return next(null, req, res, next)
+        })
       })
     })
   },
@@ -507,25 +582,17 @@ const models = {
   * If true, transfers the equivalent amoutn to the bnb address defined.
   */
   finalizeSwap(req, res, next) {
-    let result = models.validateFinalizeSwap(req.body)
+    models.descryptPayload(req, res, next, (data) => {
 
-    if(result !== true) {
-      res.status(400)
-      res.body = { 'status': 400, 'success': false, 'result': result }
-      return next(null, req, res, next)
-    }
+      let result = models.validateFinalizeSwap(data)
 
-    models.getTokenSwap(req.body.uuid, (err, swapInfo) => {
-      if(err) {
-        console.log(err)
-        res.status(500)
-        res.body = { 'status': 500, 'success': false, 'result': err }
+      if(result !== true) {
+        res.status(400)
+        res.body = { 'status': 400, 'success': false, 'result': result }
         return next(null, req, res, next)
       }
 
-      console.log('SWAP INFO')
-      console.log(swapInfo)
-      models.getTokenSwapInfo(swapInfo.token_uuid, (err, tokenInfo) => {
+      models.getTokenSwap(data.uuid, (err, swapInfo) => {
         if(err) {
           console.log(err)
           res.status(500)
@@ -533,116 +600,122 @@ const models = {
           return next(null, req, res, next)
         }
 
-        console.log('TOKEN INFO')
-        console.log(tokenInfo)
-        eth.getTransactions(tokenInfo.erc20_address, swapInfo.eth_address, tokenInfo.eth_address, swapInfo.amount, (err, transactions) => {
+        models.getTokenSwapInfo(swapInfo.token_uuid, (err, tokenInfo) => {
+          if(err) {
+            console.log(err)
+            res.status(500)
+            res.body = { 'status': 500, 'success': false, 'result': err }
+            return next(null, req, res, next)
+          }
 
-          console.log('ERC0: ', tokenInfo.erc20_address)
-          console.log('From: ', swapInfo.eth_address)
-          console.log('To: ', tokenInfo.eth_address)
-          console.log('Amount: ', swapInfo.amount)
+          eth.getTransactions(tokenInfo.erc20_address, swapInfo.eth_address, tokenInfo.eth_address, swapInfo.amount, (err, transactions) => {
 
-          console.log('TRANSACTIONS')
-          console.log(transactions)
-          if(transactions.length > 0) {
-            models.getTransactionHashs(swapInfo.eth_address, tokenInfo.erc20_address, (err, previousTransactions) => {
+            console.log('ERC0: ', tokenInfo.erc20_address)
+            console.log('From: ', swapInfo.eth_address)
+            console.log('To: ', tokenInfo.eth_address)
+            console.log('Amount: ', swapInfo.amount)
 
-              console.log('PREVIOUS TRANSACTIONS')
-              console.log(previousTransactions)
-              //checck whether the transfer was done to fund a previous swap
-              let acceptableTransactions = []
-              if(transactions) {
-                for(var i = 0; i < transactions.length; i++) {
-                  let used = false
-                  if(previousTransactions) {
-                    for(var j = 0; j < previousTransactions.length; j++) {
-                      if(transactions[i].transactionHash == previousTransactions[j].deposit_transaction_hash) {
-                        used = true
+            if(transactions.length > 0) {
+              models.getTransactionHashs(swapInfo.eth_address, tokenInfo.erc20_address, (err, previousTransactions) => {
+                if(err) {
+                  console.log(err)
+                  res.status(500)
+                  res.body = { 'status': 500, 'success': false, 'result': err }
+                  return next(null, req, res, next)
+                }
+
+                //checck whether the transfer was done to fund a previous swap
+                let acceptableTransactions = []
+                if(transactions) {
+                  for(var i = 0; i < transactions.length; i++) {
+                    let used = false
+                    if(previousTransactions) {
+                      for(var j = 0; j < previousTransactions.length; j++) {
+                        if(transactions[i].transactionHash == previousTransactions[j].deposit_transaction_hash) {
+                          used = true
+                        }
                       }
                     }
-                  }
-                  if(!used) {
-                    acceptableTransactions.push(transactions[i])
+                    if(!used) {
+                      acceptableTransactions.push(transactions[i])
+                    }
                   }
                 }
-              }
 
-              console.log('ACCEPTABLE TRANSACTIONS')
-              console.log(acceptableTransactions)
-              //success, we can transfer the funds
-              if(acceptableTransactions.length > 0) {
-                models.updateWithDepositTransactionHash(swapInfo.uuid, acceptableTransactions[0].transactionHash, (err) => {
-                  if(err) {
-                    console.log(err)
-                    res.status(500)
-                    res.body = { 'status': 500, 'success': false, 'result': err }
-                    return next(null, req, res, next)
-                  }
-
-                  models.getKey(tokenInfo.bnb_address, (err, key) => {
-                    if(err || !key) {
+                //if we find a successful transaction, we can transfer the funds
+                if(acceptableTransactions.length > 0) {
+                  models.updateWithDepositTransactionHash(swapInfo.uuid, acceptableTransactions[0].transactionHash, (err) => {
+                    if(err) {
                       console.log(err)
                       res.status(500)
-                      res.body = { 'status': 500, 'success': false, 'result': 'Unable to retrieve key' }
+                      res.body = { 'status': 500, 'success': false, 'result': err }
                       return next(null, req, res, next)
                     }
 
-                    console.log('KEY')
-                    console.log(key)
-
-                    let transferAmount = swapInfo.amount
-
-                    if(tokenInfo.fee_per_swap && tokenInfo.fee_per_swap != '') {
-                      transferAmount = parseFloat(swapInfo.amount) - parseFloat(tokenInfo.fee_per_swap)
-                    }
-
-                    bnb.transfer(key.mnemonic, swapInfo.bnb_address, transferAmount, tokenInfo.unique_symbol, 'BNBridge Swap', (err, swapResult) => {
-                      if(err) {
+                    models.getKey(tokenInfo.bnb_address, (err, key) => {
+                      if(err || !key) {
                         console.log(err)
                         res.status(500)
-                        res.body = { 'status': 500, 'success': false, 'result': err }
-
-                        models.revertUpdateWithDepositTransactionHash(swapInfo.uuid, acceptableTransactions[0].transactionHash, (err) => {
-                          if(err) {
-                            console.log(err)
-                          }
-                        })
-
+                        res.body = { 'status': 500, 'success': false, 'result': 'Unable to retrieve key' }
                         return next(null, req, res, next)
                       }
 
-                      console.log('SWAP RESULT')
-                      console.log(swapResult)
-                      if(swapResult && swapResult.result && swapResult.result.length > 0) {
-                        let resultHash = swapResult.result[0].hash
+                      let transferAmount = swapInfo.amount
 
-                        models.updateWithTransferTransactionHash(swapInfo.uuid, resultHash, (err) => {
-                          if(err) {
-                            console.log(err)
-                            res.status(500)
-                            res.body = { 'status': 500, 'success': false, 'result': err }
-                            return next(null, req, res, next)
-                          }
-
-                          res.status(205)
-                          res.body = { 'status': 200, 'success': true, 'result': resultHash }
-                          return next(null, req, res, next)
-                        })
+                      if(tokenInfo.fee_per_swap && tokenInfo.fee_per_swap != '') {
+                        transferAmount = parseFloat(swapInfo.amount) - parseFloat(tokenInfo.fee_per_swap)
                       }
+
+                      bnb.transfer(key.mnemonic, swapInfo.bnb_address, transferAmount, tokenInfo.unique_symbol, 'BNBridge Swap', (err, swapResult) => {
+                        if(err) {
+                          console.log(err)
+                          res.status(500)
+                          res.body = { 'status': 500, 'success': false, 'result': err }
+
+                          models.revertUpdateWithDepositTransactionHash(swapInfo.uuid, acceptableTransactions[0].transactionHash, (err) => {
+                            if(err) {
+                              console.log(err)
+                            }
+                          })
+
+                          return next(null, req, res, next)
+                        }
+
+                        if(swapResult && swapResult.result && swapResult.result.length > 0) {
+                          let resultHash = swapResult.result[0].hash
+
+                          models.updateWithTransferTransactionHash(swapInfo.uuid, resultHash, (err) => {
+                            if(err) {
+                              console.log(err)
+                              res.status(500)
+                              res.body = { 'status': 500, 'success': false, 'result': err }
+                              return next(null, req, res, next)
+                            }
+
+                            res.status(205)
+                            res.body = { 'status': 200, 'success': true, 'result': resultHash }
+                            return next(null, req, res, next)
+                          })
+                        } else {
+                          res.status(400)
+                          res.body = { 'status': 400, 'success': false, 'result': 'Swap result is not defined' }
+                          return next(null, req, res, next)
+                        }
+                      })
                     })
                   })
-                })
-              } else {
-                res.status(400)
-                res.body = { 'status': 400, 'success': false, 'result': 'Unable to find the transaction' }
-                return next(null, req, res, next)
-              }
-            })
-          } else {
-            res.status(400)
-            res.body = { 'status': 400, 'success': false, 'result': 'Unable to find the transaction' }
-            return next(null, req, res, next)
-          }
+                } else {
+                  res.status(400)
+                  res.body = { 'status': 400, 'success': false, 'result': 'Unable to find the transaction' }
+                  return next(null, req, res, next)
+                }
+              })
+            } else {
+              res.status(400)
+              res.body = { 'status': 400, 'success': false, 'result': 'Unable to find the transaction' }
+              return next(null, req, res, next)
+            }
+          })
         })
       })
     })
@@ -703,40 +776,23 @@ const models = {
   *  -- returns to user with deposit address
   */
   submitListProposal(req, res, next) {
-    let result = models.validateListProposal(req.body)
+    models.descryptPayload(req, res, next, (data) => {
+      let result = models.validateListProposal(data)
 
-    if(result !== true) {
-      res.status(400)
-      res.body = { 'status': 400, 'success': false, 'result': result }
-      return next(null, req, res, next)
-    }
-
-    const {
-      token_uuid,
-      initial_price,
-      expiry_time,
-      voting_period
-    } = req.body
-
-    models.getTokenInfo(token_uuid, (err, tokenInfo) => {
-      if(err) {
-        console.log(err)
-        res.status(500)
-        res.body = { 'status': 500, 'success': false, 'result': err }
+      if(result !== true) {
+        res.status(400)
+        res.body = { 'status': 400, 'success': false, 'result': result }
         return next(null, req, res, next)
       }
 
-      const title = 'List '+tokenInfo.unique_symbol+'/BNB'
-      const description = 'List '+tokenInfo.unique_symbol+' to BNB exchange pair'
+      const {
+        token_uuid,
+        initial_price,
+        expiry_time,
+        voting_period
+      } = data
 
-      const now = Math.floor(Date.now() / 1000)
-      const votingTime = voting_period*86400
-      const expiryTime = now + votingTime + (expiry_time*86400) /* pleb system doesn't use milliseconds */
-
-      console.log(votingTime)
-      console.log(expiryTime)
-
-      models.insertListProposal(token_uuid, tokenInfo.unique_symbol, title, description, initial_price, expiryTime, votingTime, (err, insertResult) => {
+      models.getTokenInfo(token_uuid, (err, tokenInfo) => {
         if(err) {
           console.log(err)
           res.status(500)
@@ -744,11 +800,27 @@ const models = {
           return next(null, req, res, next)
         }
 
-        insertResult.bnb_address = tokenInfo.bnb_address
+        const title = 'List '+tokenInfo.unique_symbol+'/BNB'
+        const description = 'List '+tokenInfo.unique_symbol+' to BNB exchange pair'
 
-        res.status(205)
-        res.body = { 'status': 200, 'success': true, 'result': insertResult }
-        return next(null, req, res, next)
+        const now = Math.floor(Date.now() / 1000)
+        const votingTime = voting_period*86400
+        const expiryTime = now + votingTime + (expiry_time*86400)
+
+        models.insertListProposal(token_uuid, tokenInfo.unique_symbol, title, description, initial_price, expiryTime, votingTime, (err, insertResult) => {
+          if(err) {
+            console.log(err)
+            res.status(500)
+            res.body = { 'status': 500, 'success': false, 'result': err }
+            return next(null, req, res, next)
+          }
+
+          insertResult.bnb_address = tokenInfo.bnb_address
+
+          res.status(205)
+          res.body = { 'status': 200, 'success': true, 'result': insertResult }
+          return next(null, req, res, next)
+        })
       })
     })
   },
@@ -798,62 +870,51 @@ const models = {
   *  -- returns
   */
   finalizeListProposal(req, res, next) {
-    let result = models.validateFinalizeListProposal(req.body)
+    models.descryptPayload(req, res, next, (data) => {
+      let result = models.validateFinalizeListProposal(data)
 
-    if(result !== true) {
-      res.status(400)
-      res.body = { 'status': 400, 'success': false, 'result': result }
-      return next(null, req, res, next)
-    }
-
-    const { uuid } = req.body
-
-    models.getListProposalInfo(uuid, (err, proposalInfo) => {
-      if(err) {
-        console.log(err)
-        res.status(500)
-        res.body = { 'status': 500, 'success': false, 'result': err }
+      if(result !== true) {
+        res.status(400)
+        res.body = { 'status': 400, 'success': false, 'result': result }
         return next(null, req, res, next)
       }
 
-      console.log(proposalInfo)
-      models.validateProposalBalances(proposalInfo, (err, code, balanceValidation) => {
-        console.log(balanceValidation)
+      const { uuid } = data
+
+      models.getListProposalInfo(uuid, (err, proposalInfo) => {
         if(err) {
           console.log(err)
-          res.status(code)
-          res.body = { 'status': code, 'success': false, 'result': err }
+          res.status(500)
+          res.body = { 'status': 500, 'success': false, 'result': err }
           return next(null, req, res, next)
         }
 
-        models.getTokenInfo(proposalInfo.token_uuid, (err, tokenInfo) => {
+        models.validateProposalBalances(proposalInfo, (err, code, balanceValidation) => {
           if(err) {
             console.log(err)
-            res.status(500)
-            res.body = { 'status': 500, 'success': false, 'result': 'Unable to retrieve token information' }
+            res.status(code)
+            res.body = { 'status': code, 'success': false, 'result': err }
             return next(null, req, res, next)
           }
 
-          console.log(tokenInfo)
-          models.getKey(tokenInfo.bnb_address, (err, key) => {
-            if(err || !key) {
+          models.getTokenInfo(proposalInfo.token_uuid, (err, tokenInfo) => {
+            if(err) {
               console.log(err)
               res.status(500)
-              res.body = { 'status': 500, 'success': false, 'result': 'Unable to retrieve key' }
+              res.body = { 'status': 500, 'success': false, 'result': 'Unable to retrieve token information' }
               return next(null, req, res, next)
             }
 
-            console.log(key)
-            bnb.submitListProposal(tokenInfo.unique_symbol, key.key_name, key.password, proposalInfo.initial_price, proposalInfo.title, proposalInfo.description, proposalInfo.expiry_time, proposalInfo.voting_period, balanceValidation.depositRequired, (err, transactionHash) => {
-              if(err) {
+            console.log(tokenInfo)
+            models.getKey(tokenInfo.bnb_address, (err, key) => {
+              if(err || !key) {
                 console.log(err)
                 res.status(500)
-                res.body = { 'status': 500, 'success': false, 'result': err }
+                res.body = { 'status': 500, 'success': false, 'result': 'Unable to retrieve key' }
                 return next(null, req, res, next)
               }
 
-              console.log(transactionHash)
-              models.updateListProposal(proposalInfo.uuid, transactionHash, (err, updateResponse) => {
+              bnb.submitListProposal(tokenInfo.unique_symbol, key.key_name, key.password, proposalInfo.initial_price, proposalInfo.title, proposalInfo.description, proposalInfo.expiry_time, proposalInfo.voting_period, balanceValidation.depositRequired, (err, transactionHash) => {
                 if(err) {
                   console.log(err)
                   res.status(500)
@@ -861,9 +922,8 @@ const models = {
                   return next(null, req, res, next)
                 }
 
-                console.log(updateResponse)
-
-                models.updateTokenListProposed(tokenInfo.uuid, proposalInfo.uuid, (err, updateTokenResponse) => {
+                console.log(transactionHash)
+                models.updateListProposal(proposalInfo.uuid, transactionHash, (err, updateResponse) => {
                   if(err) {
                     console.log(err)
                     res.status(500)
@@ -871,10 +931,19 @@ const models = {
                     return next(null, req, res, next)
                   }
 
-                  proposalInfo.transaction_hash = transactionHash
-                  res.status(205)
-                  res.body = { 'status': 200, 'success': true, 'result': proposalInfo }
-                  return next(null, req, res, next)
+                  models.updateTokenListProposed(tokenInfo.uuid, proposalInfo.uuid, (err, updateTokenResponse) => {
+                    if(err) {
+                      console.log(err)
+                      res.status(500)
+                      res.body = { 'status': 500, 'success': false, 'result': err }
+                      return next(null, req, res, next)
+                    }
+
+                    proposalInfo.transaction_hash = transactionHash
+                    res.status(205)
+                    res.body = { 'status': 200, 'success': true, 'result': proposalInfo }
+                    return next(null, req, res, next)
+                  })
                 })
               })
             })
@@ -882,7 +951,6 @@ const models = {
         })
       })
     })
-
   },
 
   validateFinalizeListProposal(body) {
@@ -917,7 +985,7 @@ const models = {
       })
       .reduce(reducer, 0)
 
-      let depositRequired = (1000 * 100000000) // 1000 on mainnet. Move to config
+      let depositRequired = parseFloat(config.list_proposal_deposit) // 1000 on mainnet. Move to config
       totalRequired = totalRequired + depositRequired
 
       bnb.getBalance(proposalInfo.bnb_address, (err, balances) => {
@@ -982,28 +1050,20 @@ const models = {
   *  -- transfer that BNB back to the user. So we need to store the sending address of the funds. ( complications if we do multiple deposits )
   */
   list(req, res, next) {
-    let result = models.validatelist(req.body)
+    models.descryptPayload(req, res, next, (data) => {
+      let result = models.validatelist(data)
 
-    if(result !== true) {
-      res.status(400)
-      res.body = { 'status': 400, 'success': false, 'result': result }
-      return next(null, req, res, next)
-    }
-
-    const {
-      uuid
-    } = req.body
-
-    models.getListProposalInfo(uuid, (err, proposalInfo) => {
-      if(err) {
-        console.log(err)
-        res.status(500)
-        res.body = { 'status': 500, 'success': false, 'result': err }
+      if(result !== true) {
+        res.status(400)
+        res.body = { 'status': 400, 'success': false, 'result': result }
         return next(null, req, res, next)
       }
 
-      console.log(proposalInfo)
-      bnb.getListProposal(proposalInfo.proposal_id, (err, bnbProposalInfo) => {
+      const {
+        uuid
+      } = data
+
+      models.getListProposalInfo(uuid, (err, proposalInfo) => {
         if(err) {
           console.log(err)
           res.status(500)
@@ -1011,37 +1071,33 @@ const models = {
           return next(null, req, res, next)
         }
 
-        console.log(bnbProposalInfo)
-        if(bnbProposalInfo && bnbProposalInfo.value && bnbProposalInfo.value.proposal_status === 'Passed') {
+        bnb.getListProposal(proposalInfo.proposal_id, (err, bnbProposalInfo) => {
+          if(err) {
+            console.log(err)
+            res.status(500)
+            res.body = { 'status': 500, 'success': false, 'result': err }
+            return next(null, req, res, next)
+          }
 
-          models.validateListBalances(proposalInfo, (err, balanceValidation) => {
-            if(err) {
-              console.log(err)
-              res.status(code)
-              res.body = { 'status': code, 'success': false, 'result': err }
-              return next(null, req, res, next)
-            }
+          if(bnbProposalInfo && bnbProposalInfo.value && bnbProposalInfo.value.proposal_status === 'Passed') {
 
-            console.log(balanceValidation)
-            models.getKey(proposalInfo.bnb_address, (err, key) => {
-              if(err || !key) {
+            models.validateListBalances(proposalInfo, (err, balanceValidation) => {
+              if(err) {
                 console.log(err)
-                res.status(500)
-                res.body = { 'status': 500, 'success': false, 'result': 'Unable to retrieve key' }
+                res.status(code)
+                res.body = { 'status': code, 'success': false, 'result': err }
                 return next(null, req, res, next)
               }
 
-              console.log(key)
-              bnb.list(proposalInfo.unique_symbol, key.key_name, key.password, proposalInfo.initial_price, proposalInfo.proposal_id, (err, listResult) => {
-                if(err) {
+              models.getKey(proposalInfo.bnb_address, (err, key) => {
+                if(err || !key) {
                   console.log(err)
-                  res.status(code)
-                  res.body = { 'status': code, 'success': false, 'result': err }
+                  res.status(500)
+                  res.body = { 'status': 500, 'success': false, 'result': 'Unable to retrieve key' }
                   return next(null, req, res, next)
                 }
 
-                console.log(listResult)
-                models.updateListProposalListed(proposalInfo.uuid, (err, updateData) => {
+                bnb.list(proposalInfo.unique_symbol, key.key_name, key.password, proposalInfo.initial_price, proposalInfo.proposal_id, (err, listResult) => {
                   if(err) {
                     console.log(err)
                     res.status(code)
@@ -1049,8 +1105,7 @@ const models = {
                     return next(null, req, res, next)
                   }
 
-                  console.log(updateData)
-                  models.updateTokenListed(proposalInfo.token_uuid, (err, updateData) => {
+                  models.updateListProposalListed(proposalInfo.uuid, (err, updateData) => {
                     if(err) {
                       console.log(err)
                       res.status(code)
@@ -1058,21 +1113,29 @@ const models = {
                       return next(null, req, res, next)
                     }
 
-                    res.status(205)
-                    res.body = { 'status': 200, 'success': true, 'result': listResult }
-                    return next(null, req, res, next)
+                    models.updateTokenListed(proposalInfo.token_uuid, (err, updateData) => {
+                      if(err) {
+                        console.log(err)
+                        res.status(code)
+                        res.body = { 'status': code, 'success': false, 'result': err }
+                        return next(null, req, res, next)
+                      }
+
+                      res.status(205)
+                      res.body = { 'status': 200, 'success': true, 'result': listResult }
+                      return next(null, req, res, next)
+                    })
                   })
                 })
               })
             })
-          })
-        } else {
-          res.status(400)
-          res.body = { 'status': 400, 'success': false, 'result': 'List proposal has not passed yet' }
-          return next(null, req, res, next)
-        }
+          } else {
+            res.status(400)
+            res.body = { 'status': 400, 'success': false, 'result': 'List proposal has not passed yet' }
+            return next(null, req, res, next)
+          }
+        })
       })
-
     })
   },
 
@@ -1227,6 +1290,33 @@ const models = {
       console.log(err)
     })
   }
+}
+
+String.prototype.hexEncode = function(){
+    var hex, i;
+    var result = "";
+    for (i=0; i<this.length; i++) {
+        hex = this.charCodeAt(i).toString(16);
+        result += ("000"+hex).slice(-4);
+    }
+    return result
+}
+String.prototype.hexDecode = function(){
+    var j;
+    var hexes = this.match(/.{1,4}/g) || [];
+    var back = "";
+    for(j = 0; j<hexes.length; j++) {
+        back += String.fromCharCode(parseInt(hexes[j], 16));
+    }
+
+    return back;
+}
+
+function decrypt(text,seed){
+  var decipher = crypto.createDecipher('aes-256-cbc', seed)
+  var dec = decipher.update(text,'base64','utf8')
+  dec += decipher.final('utf8');
+  return dec;
 }
 
 module.exports = models

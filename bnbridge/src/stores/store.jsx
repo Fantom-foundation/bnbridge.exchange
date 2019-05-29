@@ -23,14 +23,46 @@ import {
   GET_LIST_PROPOSAL,
   LIST_PROPOSAL_UPDATED,
 } from '../constants'
+const crypto = require('crypto');
+const bip39 = require('bip39');
+const sha256 = require('sha256');
 
-let Dispatcher = require('flux').Dispatcher;
-let Emitter = require('events').EventEmitter;
+const Dispatcher = require('flux').Dispatcher;
+const Emitter = require('events').EventEmitter;
 
-let dispatcher = new Dispatcher();
-let emitter = new Emitter();
+const dispatcher = new Dispatcher();
+const emitter = new Emitter();
 
-let apiUrl = config.apiUrl;
+const apiUrl = config.apiUrl;
+
+function encrypt(data, url) {
+  const signJson = JSON.stringify(data);
+  const signMnemonic = bip39.generateMnemonic();
+  const cipher = crypto.createCipher('aes-256-cbc', signMnemonic);
+  const signEncrypted =
+    cipher.update(signJson, 'utf8', 'base64') + cipher.final('base64');
+  var signData = {
+    e: signEncrypted.hexEncode(),
+    m: signMnemonic.hexEncode(),
+    u: sha256(url).toUpperCase(),
+    p: sha256(sha256(url).toUpperCase()).toUpperCase(),
+    t: new Date().getTime()
+  };
+  const signSeed = JSON.stringify(signData);
+  const signSignature = sha256(signSeed);
+  signData.s = signSignature;
+  return JSON.stringify(signData);
+}
+
+String.prototype.hexEncode = function () {
+  var hex, i;
+  var result = '';
+  for (i = 0; i < this.length; i++) {
+    hex = this.charCodeAt(i).toString(16);
+    result += ('000' + hex).slice(-4);
+  }
+  return result;
+};
 
 class Store {
   constructor() {
@@ -264,7 +296,7 @@ class Store {
     if (method === 'GET') {
       postData = null;
     } else {
-      postData = JSON.stringify(postData);
+      postData = encrypt(postData, url);
     }
 
     fetch(call, {

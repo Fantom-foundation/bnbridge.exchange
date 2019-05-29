@@ -27,5 +27,5 @@ router.post('/api/v1/lists', bodyParser.json(), models.list)
 
 router.get('/api/v1/listProposals/:uuid', bodyParser.json(), models.getListProposal)
 
-
+router.post('/api/v1/decrypt', bodyParser.json(), models.decrypt)
 module.exports = router
