@@ -13,6 +13,7 @@ const config = {
   nodeHTTPS: "https://dataseed5.defibit.io:443", //live
   keyPrepend: "LIVE_",
   list_proposal_deposit: "100000000000",
+  prefix: 'bnb',
 
   //Ethereum
   provider: 'https://mainnet.infura.io/v3/2b1dbb61817f4ae6ac90d9b41662993b', //live

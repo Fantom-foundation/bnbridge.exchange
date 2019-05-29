@@ -147,7 +147,7 @@ const bnb = {
     mnemonic = mnemonic.replace(/(\r\n|\n|\r)/gm, "");
 
     const privateFrom = BnbApiClient.crypto.getPrivateKeyFromMnemonic(mnemonic);
-    const publicFrom = BnbApiClient.crypto.getAddressFromPrivateKey(privateFrom);
+    const publicFrom = BnbApiClient.crypto.getAddressFromPrivateKey(privateFrom, config.prefix);
 
     const sequenceURL = `${config.api}api/v1/account/${publicFrom}/sequence`;
 
