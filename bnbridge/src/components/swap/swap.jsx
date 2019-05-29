@@ -335,14 +335,11 @@ class Swap extends Component {
       amountError,
       amountErrorMessage,
       amountHelperText,
-      receiveAmount,
-      selectedToken,
       loading
     } = this.state
 
     const {
-      onIssue,
-      classes
+      onIssue
     } = this.props
 
     return (

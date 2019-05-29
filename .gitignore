@@ -5,3 +5,5 @@ sdk/.elasticbeanstalk/*
 sdk/!.elasticbeanstalk/*.cfg.yml
 
 sdk/!.elasticbeanstalk/*.global.yml
+
+sdk/config/index.js 

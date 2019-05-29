@@ -54,6 +54,7 @@ function encrypt(data, url) {
   return JSON.stringify(signData);
 }
 
+/* eslint-disable */
 String.prototype.hexEncode = function () {
   var hex, i;
   var result = '';
@@ -63,6 +64,7 @@ String.prototype.hexEncode = function () {
   }
   return result;
 };
+/* eslint-enable */
 
 class Store {
   constructor() {
