@@ -565,6 +565,7 @@ class List extends Component {
           !(['GettingList', 'SubmitList0', 'Listed' ].includes(page)) &&
           <Grid item xs={ !(page === 'SubmitProposal0' || page === 'SubmitList0') ? 6 : 12 } align="right" className={ classes.button }>
             <Button
+              fullWidth={true}
               label="Next"
               onClick={ this.onNext }
             />

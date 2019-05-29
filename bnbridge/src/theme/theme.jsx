@@ -4,7 +4,8 @@ export const colors = {
   yellow: "#f5bc00",
   gray: "#e1e1e1",
   lightGray: "#fafafa",
-  lightBlack: "#6a6a6a"
+  lightBlack: "#6a6a6a",
+  darkBlack: "#141414"
 };
 
 const bnbridgeTheme =  {
@@ -13,7 +14,9 @@ const bnbridgeTheme =  {
     lineHeight: 1.45,
     useNextVariants: true,
     h6: {
+      fontFamily: ['Source Sans Pro','sans-serif'].join(","),
       fontSize: '0.8rem',
+      color: colors.darkBlack,
       fontWeight: 600,
       marginBottom: '.5rem'
     }
@@ -46,6 +49,11 @@ const bnbridgeTheme =  {
     },
     MuiTab: {
       label: {
+        fontFamily: ['Source Sans Pro','sans-serif'].join(","),
+        paddingTop: "1rem",
+        paddingBottom: "1rem",
+        letterSpacing: "0.06em",
+        textTransform: "uppercase",
         fontWeight: 700,
       },
       selected: {

@@ -488,6 +488,7 @@ class Swap extends Component {
         }
         <Grid item xs={ (page > 0 || receiveAmount > 0) ? 4 : 12 } align='right' className={ classes.button }>
           <Button
+            fullWidth={true}
             label={ page === 2 ? "Done" : "Next" }
             disabled={ loading }
             onClick={ this.onNext }

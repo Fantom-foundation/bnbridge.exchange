@@ -30,10 +30,15 @@ const styles = theme => ({
   action: {
     fontSize: '1rem',
     color: colors.lightBlack,
-    display: 'inline-block'
+    display: 'inline-block',
+    marginTop: "0.5rem"
   },
   price: {
-    paddingRight: '60px'
+    paddingRight: '60px',
+    fontSize: '1rem',
+    color: colors.lightBlack,
+    display: 'inline-block',
+    marginTop: "0.5rem"
   }
 });
 
@@ -131,7 +136,7 @@ class Instructions extends Component {
     return this.state.feesDisplay.map((fee) => {
       return (
         <React.Fragment key={fee.description}>
-          <Grid item xs={6} align='left'>
+          <Grid item xs={6} align='left' className={ classes.action }>
             {fee.description}
           </Grid>
           <Grid item xs={6} align='right' className={ classes.price }>
