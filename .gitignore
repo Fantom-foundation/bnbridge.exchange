@@ -7,3 +7,4 @@ sdk/!.elasticbeanstalk/*.cfg.yml
 sdk/!.elasticbeanstalk/*.global.yml
 
 sdk/config/index.js 
+/sdk/config/index.js
