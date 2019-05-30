@@ -311,7 +311,13 @@ class Store {
         return
       }
 
-      emitter.emit(BNB_BALANCES_UPDATED, data.result);
+      if(data.success) {
+        emitter.emit(BNB_BALANCES_UPDATED, data.result);
+      } else if (data.errorMsg) {
+        emitter.emit(ERROR, data.errorMsg);
+      } else {
+        emitter.emit(ERROR, data.result);
+      }
     });
   };
 

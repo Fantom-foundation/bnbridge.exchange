@@ -30,6 +30,11 @@ const bnb = {
     ptyProcess.write('exit\r');
   },
 
+  validateAddress(address) {
+    const addressValid = BnbApiClient.crypto.checkAddress(address);
+    return addressValid
+  },
+
   getFees(callback) {
     const url = `${config.api}api/v1/fees`;
 

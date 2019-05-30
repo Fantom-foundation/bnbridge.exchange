@@ -329,7 +329,7 @@ class Swap extends Component {
         token_uuid: theToken[0].uuid
       }
       dispatcher.dispatch({type: GET_BNB_BALANCES, content })
-      this.setState({ loading: true })
+      this.setState({ loading: true, bnbBalances: null })
     }
 
     if(theToken.length > 0  && erc20address && erc20address !== "" && erc20address.length === Config.erc20addressLength) {
@@ -338,7 +338,7 @@ class Swap extends Component {
         token_uuid: theToken[0].uuid
       }
       dispatcher.dispatch({type: GET_ETH_BALANCES, content })
-      this.setState({ loading: true })
+      this.setState({ loading: true, ethBalances: null })
     }
   };
 
@@ -375,7 +375,7 @@ class Swap extends Component {
           token_uuid: selectedToken.uuid
         }
         dispatcher.dispatch({type: GET_BNB_BALANCES, content })
-        this.setState({ loading: true })
+        this.setState({ loading: true, bnbBalances: null })
       }
     }
 
@@ -391,7 +391,7 @@ class Swap extends Component {
           token_uuid: selectedToken.uuid
         }
         dispatcher.dispatch({type: GET_ETH_BALANCES, content })
-        this.setState({ loading: true })
+        this.setState({ loading: true, ethBalances: null })
       }
     }
   };

@@ -559,6 +559,10 @@ const models = {
       return 'amount is required'
     }
 
+    if(!bnb.validateAddress(bnb_address)) {
+      return 'bnb_address is invalid'
+    }
+
     return true
   },
 
@@ -1375,6 +1379,10 @@ const models = {
 
     if(!token_uuid) {
       return 'token_uuid is required'
+    }
+
+    if(!bnb.validateAddress(bnb_address)) {
+      return 'bnb_address is invalid'
     }
 
     return true
