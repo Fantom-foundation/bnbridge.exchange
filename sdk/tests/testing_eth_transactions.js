@@ -4,10 +4,9 @@ const config = require('../config')
 var web3 = new Web3(new Web3.providers.HttpProvider(config.provider));
 
 
-const contractAddress = '0x4e15361fd6b4bb609fa63c81a2be19d873717870'
-const accountAddress = '0xb258aD4125e84068F3A47fbBC4F6aCeD2bC148EC'
+const contractAddress = '0x4E15361FD6b4BB609Fa63C81A2be19d873717870'
+const accountAddress = '0x1e321be460b5b056e861f682323fdf1511d275c7'
 const depositAddress = '0x29B169183b0281c9b838190847184f7F1D555fa4'
-
 
 function getTransactions(contractAddress, accountAddress, depositAddress, callback) {
 
@@ -20,9 +19,8 @@ function getTransactions(contractAddress, accountAddress, depositAddress, callba
   })
   .then((events) => {
     let returnEvents = events.filter((event) => {
-      if(event.returnValues._from == accountAddress && event.returnValues._to == depositAddress) {
-        console.log(event.returnValues._value._hex)
-        let amount = parseInt(event.returnValues._value._hex)/1000000000000000000
+      if(event.returnValues._from.toUpperCase() == accountAddress.toUpperCase() && event.returnValues._to.toUpperCase() == depositAddress.toUpperCase()) {
+        let amount = parseFloat(web3.utils.fromWei(event.returnValues._value._hex, 'ether'))
         console.log(amount)
         return true
       }
