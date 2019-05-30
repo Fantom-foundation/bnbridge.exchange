@@ -614,6 +614,12 @@ const models = {
           }
 
           eth.getTransactions(tokenInfo.erc20_address, swapInfo.eth_address, tokenInfo.eth_address, swapInfo.amount, (err, transactions) => {
+            if(err) {
+              console.log(err)
+              res.status(500)
+              res.body = { 'status': 500, 'success': false, 'result': err }
+              return next(null, req, res, next)
+            }
 
             console.log('ERC0: ', tokenInfo.erc20_address)
             console.log('From: ', swapInfo.eth_address)

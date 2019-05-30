@@ -72,6 +72,7 @@ const styles = theme => ({
     fontSize: '16px',
     marginTop: '24px',
     lineHeight: '42px',
+    maxWidth: '250px'
   },
 });
 
@@ -573,7 +574,7 @@ class Swap extends Component {
         {
             (page === 0 && receiveAmount > 0 && selectedToken) &&
             <Grid item xs={ 8 }>
-              <Typography className={ classes.disclaimer }>You will receive {receiveAmount} {selectedToken.symbol}-BEP2</Typography>
+              <Typography className={ classes.disclaimer } noWrap >You will receive {receiveAmount} {selectedToken.symbol}-BEP2</Typography>
             </Grid>
         }
         <Grid item xs={ (page > 0 || (receiveAmount > 0 && selectedToken)) ? 4 : 12 } align='right' className={ classes.button }>

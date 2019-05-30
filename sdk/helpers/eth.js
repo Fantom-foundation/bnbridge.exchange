@@ -14,19 +14,20 @@ const eth = {
 
     myContract.getPastEvents('Transfer', {
       fromBlock: 0,
-      toBlock: 'latest'
+      toBlock: 'latest',
+      filter: { _to: depositAddress, _from: accountAddress }
     })
     .then((events) => {
       let returnEvents = events.filter((event) => {
         if(event.returnValues._from == accountAddress && event.returnValues._to == depositAddress) {
           let amount = parseInt(event.returnValues._value._hex)/1000000000000000000
-
-          console.log(amount)
-
           return depositAmount == amount
         }
       })
       callback(null, returnEvents)
+    })
+    .catch((err) => {
+      callback(err)
     });
 
   },
