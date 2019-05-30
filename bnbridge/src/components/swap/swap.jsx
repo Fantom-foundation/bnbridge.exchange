@@ -11,6 +11,7 @@ import Input from '../common/input';
 import Button from '../common/button';
 import PageLoader from "../common/pageLoader";
 import AssetSelection from "../assetSelection";
+import Config from '../../config';
 
 import {
   ERROR,
@@ -18,7 +19,11 @@ import {
   TOKEN_SWAPPED,
   FINALIZE_SWAP_TOKEN,
   TOKEN_SWAP_FINALIZED,
-  TOKENS_UPDATED
+  TOKENS_UPDATED,
+  GET_BNB_BALANCES,
+  BNB_BALANCES_UPDATED,
+  GET_ETH_BALANCES,
+  ETH_BALANCES_UPDATED
 } from '../../constants'
 
 import Store from "../../stores";
@@ -87,13 +92,17 @@ class Swap extends Component {
     amountHelperText: '',
     tokens: [],
     selectedToken: null,
-    receiveAmount: null
+    receiveAmount: null,
+    bnbBalances: null,
+    ethBalances: null
   };
 
   componentWillMount() {
     emitter.on(TOKENS_UPDATED, this.tokensUpdated);
     emitter.on(TOKEN_SWAPPED, this.tokenSwapped);
     emitter.on(TOKEN_SWAP_FINALIZED, this.tokenSwapFinalized);
+    emitter.on(BNB_BALANCES_UPDATED, this.bnbBalancesUpdated);
+    emitter.on(ETH_BALANCES_UPDATED, this.ethBalancesUpdated);
     emitter.on(ERROR, this.error);
   };
 
@@ -101,6 +110,8 @@ class Swap extends Component {
     emitter.removeListener(TOKENS_UPDATED, this.tokensUpdated);
     emitter.removeListener(TOKEN_SWAPPED, this.tokenSwapped);
     emitter.removeListener(TOKEN_SWAP_FINALIZED, this.tokenSwapFinalized);
+    emitter.removeListener(BNB_BALANCES_UPDATED, this.bnbBalancesUpdated);
+    emitter.removeListener(ETH_BALANCES_UPDATED, this.ethBalancesUpdated);
     emitter.removeListener(ERROR, this.error);
   };
 
@@ -112,10 +123,18 @@ class Swap extends Component {
     })
   };
 
+  bnbBalancesUpdated = (data) => {
+    this.setState({ bnbBalances: data, loading: false })
+  };
+
+  ethBalancesUpdated = (data) => {
+    this.setState({ ethBalances: data, loading: false })
+  };
+
   error = (err) => {
     this.props.showError(err)
     this.setState({ loading: false })
-  }
+  };
 
   tokenSwapped = (data) => {
     this.setState({
@@ -128,7 +147,6 @@ class Swap extends Component {
   };
 
   tokenSwapFinalized = (transactionHash) => {
-    console.log(transactionHash)
     this.setState({
       page: 2,
       loading: false,
@@ -256,7 +274,9 @@ class Swap extends Component {
       amountErrorMessage: '',
       amountHelperText: '',
       selectedToken: null,
-      receiveAmount: null
+      receiveAmount: null,
+      bnbBalances: null,
+      ethBalances: null
     })
   };
 
@@ -276,7 +296,9 @@ class Swap extends Component {
 
     const {
       tokens,
-      amount
+      amount,
+      bnbAddress,
+      erc20address
     } = this.state
 
     let theToken = tokens.filter((tok) => {
@@ -300,6 +322,24 @@ class Swap extends Component {
     }
 
     this.setState({ token: value, selectedToken: theToken[0], amountHelperText: amountHelperText })
+
+    if(theToken.length > 0  && bnbAddress && bnbAddress !== "" && bnbAddress.length === Config.bnbAddressLength) {
+      const content = {
+        bnb_address: bnbAddress,
+        token_uuid: theToken[0].uuid
+      }
+      dispatcher.dispatch({type: GET_BNB_BALANCES, content })
+      this.setState({ loading: true })
+    }
+
+    if(theToken.length > 0  && erc20address && erc20address !== "" && erc20address.length === Config.erc20addressLength) {
+      const content = {
+        eth_address: erc20address,
+        token_uuid: theToken[0].uuid
+      }
+      dispatcher.dispatch({type: GET_ETH_BALANCES, content })
+      this.setState({ loading: true })
+    }
   };
 
   onChange = (event) => {
@@ -322,6 +362,38 @@ class Swap extends Component {
         this.setState({ receiveAmount: '' })
       }
     }
+
+    if(event.target.id === 'bnbAddress') {
+
+      const {
+        selectedToken
+      } = this.state
+
+      if(selectedToken  && event.target.value && event.target.value !== "" && event.target.value.length === Config.bnbAddressLength) {
+        const content = {
+          bnb_address: event.target.value,
+          token_uuid: selectedToken.uuid
+        }
+        dispatcher.dispatch({type: GET_BNB_BALANCES, content })
+        this.setState({ loading: true })
+      }
+    }
+
+    if(event.target.id === 'erc20address') {
+
+      const {
+        selectedToken
+      } = this.state
+
+      if(selectedToken  && event.target.value && event.target.value !== "" && event.target.value.length === Config.erc20addressLength) {
+        const content = {
+          eth_address: event.target.value,
+          token_uuid: selectedToken.uuid
+        }
+        dispatcher.dispatch({type: GET_ETH_BALANCES, content })
+        this.setState({ loading: true })
+      }
+    }
   };
 
   renderPage0 = () => {
@@ -335,7 +407,10 @@ class Swap extends Component {
       amountError,
       amountErrorMessage,
       amountHelperText,
-      loading
+      loading,
+      bnbBalances,
+      ethBalances,
+      selectedToken
     } = this.state
 
     const {
@@ -356,6 +431,17 @@ class Swap extends Component {
             onChange={ this.onChange }
             disabled={ loading }
           />
+          {
+            bnbBalances &&
+            <React.Fragment>
+              <Typography>
+                Current {selectedToken.name} Balance: { bnbBalances.balance } { selectedToken.symbol }
+              </Typography>
+              <Typography>
+                Pending {selectedToken.name} Balance: { bnbBalances.pendingBalance } { selectedToken.symbol }
+              </Typography>
+            </React.Fragment>
+          }
         </Grid>
         <Grid item xs={ 12 }>
           <Input
@@ -368,6 +454,14 @@ class Swap extends Component {
             onChange={ this.onChange }
             disabled={ loading }
           />
+          {
+            ethBalances &&
+            <React.Fragment>
+              <Typography>
+                Current {selectedToken.name} Balance: { ethBalances.balance } { selectedToken.symbol }
+              </Typography>
+            </React.Fragment>
+          }
         </Grid>
         <Grid item xs={ 12 }>
           <Input
@@ -420,6 +514,9 @@ class Swap extends Component {
             {ethDepositAddress}
           </Typography>
           <Typography className={ classes.instructionUnderlined }>
+            Please ensure that the amount received by the contract is {amount} {symbol}-ERC20
+          </Typography>
+          <Typography className={ classes.instructionUnderlined }>
             After you've completed the transfer, click the "NEXT" button so we can verify your transaction.
           </Typography>
         </Grid>
@@ -432,21 +529,14 @@ class Swap extends Component {
       classes
     } = this.props
 
-    const {
-      transactionHash
-    } = this.state
-
     return (
       <React.Fragment>
         <Grid item xs={ 12 } className={ classes.frame }>
           <Typography className={ classes.instructionBold }>
-            Swap completed
+            Swap request completed
           </Typography>
           <Typography className={ classes.instructions }>
-            Your transaction was successfull. You can view the swap transaction by clicking on the transaction hash below.
-          </Typography>
-          <Typography className={ classes.hash } onClick={ this.onHashClick } noWrap>
-            {transactionHash}
+            Your transaction was successful. You will receive your tokens in your Binance address when they are released.
           </Typography>
         </Grid>
       </React.Fragment>
@@ -481,12 +571,12 @@ class Swap extends Component {
           </Grid>
         }
         {
-            (page === 0 && receiveAmount > 0) &&
+            (page === 0 && receiveAmount > 0 && selectedToken) &&
             <Grid item xs={ 8 }>
               <Typography className={ classes.disclaimer }>You will receive {receiveAmount} {selectedToken.symbol}-BEP2</Typography>
             </Grid>
         }
-        <Grid item xs={ (page > 0 || receiveAmount > 0) ? 4 : 12 } align='right' className={ classes.button }>
+        <Grid item xs={ (page > 0 || (receiveAmount > 0 && selectedToken)) ? 4 : 12 } align='right' className={ classes.button }>
           <Button
             fullWidth={true}
             label={ page === 2 ? "Done" : "Next" }

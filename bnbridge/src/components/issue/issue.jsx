@@ -224,7 +224,6 @@ class Issue extends Component {
   }
 
   renderPage0() {
-    const { classes } = this.props
     const {
       erc20address,
       erc20addressError,
@@ -294,9 +293,6 @@ class Issue extends Component {
             onChange={ this.onSelectChange }
           />
         </Grid>
-        <Grid item xs={ 12 }>
-          <Typography className={ classes.disclaimer }>By issuing a token here, you agree to bnbridge's Terms of Service.</Typography>
-        </Grid>
       </React.Fragment>
     )
   };
@@ -365,17 +361,17 @@ class Issue extends Component {
 
     return (
       <Grid container className={ classes.root }>
-        <Typography className={ classes.heading }>Issue</Typography>
         { page === 0 && this.renderPage0() }
         { page === 1 && this.renderPage1() }
         { page === 2 && this.renderPage2() }
+        { page > 0 &&
         <Grid item xs={ 6 } className={ classes.button }>
           <Button
             label="Back"
             onClick={ page === 0 ? onBack : this.onBack }
           />
-        </Grid>
-        <Grid item xs={ 6 } align="right" className={ classes.button }>
+        </Grid>}
+        <Grid item xs={ page > 0 ? 6 : 12 } align="right" className={ classes.button }>
           <Button
             fullWidth={true}
             label="Next"

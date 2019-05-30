@@ -329,9 +329,6 @@ class List extends Component {
 
   renderSubmitProposal0 = () => {
     const {
-      classes
-    } = this.props
-    const {
       expiryTime,
       expiryTimeError,
       votingPeriod,
@@ -374,9 +371,6 @@ class List extends Component {
             error={ initialPriceError }
             onChange={ this.onChange }
           />
-        </Grid>
-        <Grid item xs={ 12 }>
-          <Typography className={ classes.disclaimer }>By submitting a listing proposal here, you agree to bnbridge's Terms of Service.</Typography>
         </Grid>
       </React.Fragment>
     )
@@ -447,17 +441,20 @@ class List extends Component {
     } = this.props
 
     return (
-      <Grid item xs={ 12 } className={ classes.frame }>
-        <Typography className={ classes.instructionBold }>
-          Token Listed
-        </Typography>
-        <Typography className={ classes.instructionBold }>
-          This token listed on Binance DEX.
-        </Typography>
-        <Typography className={ classes.instructions }>
-          You should be able to interact with it on the exchange.
-        </Typography>
-      </Grid>)
+      <React.Fragment>
+        { this.renderAssetSelection() }
+        <Grid item xs={ 12 } className={ classes.frame }>
+          <Typography className={ classes.instructionBold }>
+            Token Listed
+          </Typography>
+          <Typography className={ classes.instructionBold }>
+            This token listed on Binance DEX.
+          </Typography>
+          <Typography className={ classes.instructions }>
+            You should be able to interact with it on the exchange.
+          </Typography>
+        </Grid>
+      </React.Fragment>)
   };
 
   renderGettingList = () => {

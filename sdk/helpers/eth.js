@@ -29,6 +29,18 @@ const eth = {
       callback(null, returnEvents)
     });
 
+  },
+
+  getERC20Balance(address, contractAddress, callback) {
+    let myContract = new web3.eth.Contract(config.erc20ABI, contractAddress)
+
+    myContract.methods.balanceOf(address).call({ from: address })
+    .then((balance) => {
+      console.log(balance);
+      const theBalance = web3.utils.fromWei(balance.toString(), 'ether')
+
+      callback(null, theBalance)
+    })
   }
 }
 

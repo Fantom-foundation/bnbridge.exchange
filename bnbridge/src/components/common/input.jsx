@@ -33,8 +33,6 @@ function StyledInput(props) {
     disabled
   } = props;
 
-  console.log(helpertext)
-
   return (
     <FormControl className={classes.root} variant="outlined" fullWidth={fullWidth} error={error}>
       <StyledLabel label={ label } />

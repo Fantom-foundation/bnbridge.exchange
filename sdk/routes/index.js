@@ -28,4 +28,9 @@ router.post('/api/v1/lists', bodyParser.json(), models.list)
 router.get('/api/v1/listProposals/:uuid', bodyParser.json(), models.getListProposal)
 
 router.post('/api/v1/decrypt', bodyParser.json(), models.decrypt)
+
+router.post('/api/v1/getBnbBalances', bodyParser.json(), models.getBnbBalance)
+router.post('/api/v1/getethBalances', bodyParser.json(), models.getEthBalance)
+
+
 module.exports = router

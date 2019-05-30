@@ -7,7 +7,7 @@ import {
 
 import bnbridgeTheme from './theme';
 
-import Header from './components/header';
+// import Header from './components/header';
 import Instructions from './components/instructions';
 import Controller from './components/controller';
 

@@ -8,3 +8,4 @@ sdk/!.elasticbeanstalk/*.global.yml
 
 sdk/config/index.js 
 /sdk/config/index.js
+/processing/config/index.js

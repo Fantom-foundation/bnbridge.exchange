@@ -22,6 +22,10 @@ import {
   TOKEN_LISTED,
   GET_LIST_PROPOSAL,
   LIST_PROPOSAL_UPDATED,
+  GET_BNB_BALANCES,
+  BNB_BALANCES_UPDATED,
+  GET_ETH_BALANCES,
+  ETH_BALANCES_UPDATED,
 } from '../constants'
 const crypto = require('crypto');
 const bip39 = require('bip39');
@@ -106,6 +110,12 @@ class Store {
             break;
           case GET_LIST_PROPOSAL:
             this.getListProposal(payload);
+            break;
+          case GET_BNB_BALANCES:
+            this.getBNBBalances(payload);
+            break;
+          case GET_ETH_BALANCES:
+            this.getETHBalances(payload);
             break;
           default: {
           }
@@ -292,6 +302,32 @@ class Store {
     });
   };
 
+  getBNBBalances(payload) {
+    const url = "/api/v1/getBnbBalances"
+    this.callApi(url, 'POST', payload.content, payload, (err, data) => {
+      if(err) {
+        console.log(err)
+        emitter.emit(ERROR, err);
+        return
+      }
+
+      emitter.emit(BNB_BALANCES_UPDATED, data.result);
+    });
+  };
+
+  getETHBalances(payload) {
+    const url = "/api/v1/getEthBalances"
+    this.callApi(url, 'POST', payload.content, payload, (err, data) => {
+      if(err) {
+        console.log(err)
+        emitter.emit(ERROR, err);
+        return
+      }
+
+      emitter.emit(ETH_BALANCES_UPDATED, data.result);
+    });
+  };
+
   callApi = function (url, method, postData, payload, callback) {
     var call = apiUrl + url;
 
@@ -325,7 +361,6 @@ class Store {
         }
       })
       .then(res => {
-        console.log(res)
         callback(null, res)
       })
       .catch(error => {

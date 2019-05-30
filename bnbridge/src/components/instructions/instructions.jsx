@@ -111,7 +111,7 @@ class Instructions extends Component {
             <li><Typography className={ classes.action }>List tokens on Binance DEX</Typography></li>
           </div>
           <div className={ classes.root } >
-            <Typography className={ classes.header }>bnbridge Fees:</Typography>
+            <Typography className={ classes.header }>Bnbridge fees:</Typography>
               <Grid
                 container
                 justify="flex-start"

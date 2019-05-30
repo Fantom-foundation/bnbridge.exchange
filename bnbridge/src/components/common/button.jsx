@@ -12,7 +12,6 @@ const styles = theme => ({
     minHeight: '43px',
     marginBottom: '12px',
     fontWeight: 700,
-    letterSpacing: "0.03em",
     border: "1px solid #f5bc00",
     transition: "all 0.2s ease-in-out",
     padding: "0.8rem 2.5rem",

@@ -452,14 +452,15 @@ const models = {
 
       const data = feesData.data
       let fees = data.filter((fee) => {
-        return ['issueMsg', 'dexList', 'submit_proposal'].includes(fee.msg_type) || fee.fixed_fee_params != null
-      }).map((fee) => {
-        if(fee.fixed_fee_params != null) {
-          return fee.fixed_fee_params
-        } else {
-          return fee
-        }
+        return ['issueMsg', 'dexList', 'submit_proposal'].includes(fee.msg_type)  //|| fee.fixed_fee_params != null
       })
+      // .map((fee) => {
+      //   if(fee.fixed_fee_params != null) {
+      //     return fee.fixed_fee_params
+      //   } else {
+      //     return fee
+      //   }
+      // })
 
       fees.push({ msg_type: 'list_proposal_deposit', fee: config.list_proposal_deposit })
 
@@ -652,57 +653,61 @@ const models = {
                       return next(null, req, res, next)
                     }
 
-                    models.getKey(tokenInfo.bnb_address, (err, key) => {
-                      if(err || !key) {
-                        console.log(err)
-                        res.status(500)
-                        res.body = { 'status': 500, 'success': false, 'result': 'Unable to retrieve key' }
-                        return next(null, req, res, next)
-                      }
+                    res.status(205)
+                    res.body = { 'status': 200, 'success': true, 'result': 'Successfully processed' }
+                    return next(null, req, res, next)
 
-                      let transferAmount = swapInfo.amount
-
-                      if(tokenInfo.fee_per_swap && tokenInfo.fee_per_swap != '') {
-                        transferAmount = parseFloat(swapInfo.amount) - parseFloat(tokenInfo.fee_per_swap)
-                      }
-
-                      bnb.transfer(key.mnemonic, swapInfo.bnb_address, transferAmount, tokenInfo.unique_symbol, 'BNBridge Swap', (err, swapResult) => {
-                        if(err) {
-                          console.log(err)
-                          res.status(500)
-                          res.body = { 'status': 500, 'success': false, 'result': err }
-
-                          models.revertUpdateWithDepositTransactionHash(swapInfo.uuid, acceptableTransactions[0].transactionHash, (err) => {
-                            if(err) {
-                              console.log(err)
-                            }
-                          })
-
-                          return next(null, req, res, next)
-                        }
-
-                        if(swapResult && swapResult.result && swapResult.result.length > 0) {
-                          let resultHash = swapResult.result[0].hash
-
-                          models.updateWithTransferTransactionHash(swapInfo.uuid, resultHash, (err) => {
-                            if(err) {
-                              console.log(err)
-                              res.status(500)
-                              res.body = { 'status': 500, 'success': false, 'result': err }
-                              return next(null, req, res, next)
-                            }
-
-                            res.status(205)
-                            res.body = { 'status': 200, 'success': true, 'result': resultHash }
-                            return next(null, req, res, next)
-                          })
-                        } else {
-                          res.status(400)
-                          res.body = { 'status': 400, 'success': false, 'result': 'Swap result is not defined' }
-                          return next(null, req, res, next)
-                        }
-                      })
-                    })
+                    // models.getKey(tokenInfo.bnb_address, (err, key) => {
+                    //   if(err || !key) {
+                    //     console.log(err)
+                    //     res.status(500)
+                    //     res.body = { 'status': 500, 'success': false, 'result': 'Unable to retrieve key' }
+                    //     return next(null, req, res, next)
+                    //   }
+                    //
+                    //   let transferAmount = swapInfo.amount
+                    //
+                    //   if(tokenInfo.fee_per_swap && tokenInfo.fee_per_swap != '') {
+                    //     transferAmount = parseFloat(swapInfo.amount) - parseFloat(tokenInfo.fee_per_swap)
+                    //   }
+                    //
+                    //   bnb.transfer(key.mnemonic, swapInfo.bnb_address, transferAmount, tokenInfo.unique_symbol, 'BNBridge Swap', (err, swapResult) => {
+                    //     if(err) {
+                    //       console.log(err)
+                    //       res.status(500)
+                    //       res.body = { 'status': 500, 'success': false, 'result': err }
+                    //
+                    //       models.revertUpdateWithDepositTransactionHash(swapInfo.uuid, acceptableTransactions[0].transactionHash, (err) => {
+                    //         if(err) {
+                    //           console.log(err)
+                    //         }
+                    //       })
+                    //
+                    //       return next(null, req, res, next)
+                    //     }
+                    //
+                    //     if(swapResult && swapResult.result && swapResult.result.length > 0) {
+                    //       let resultHash = swapResult.result[0].hash
+                    //
+                    //       models.updateWithTransferTransactionHash(swapInfo.uuid, resultHash, (err) => {
+                    //         if(err) {
+                    //           console.log(err)
+                    //           res.status(500)
+                    //           res.body = { 'status': 500, 'success': false, 'result': err }
+                    //           return next(null, req, res, next)
+                    //         }
+                    //
+                    //         res.status(205)
+                    //         res.body = { 'status': 200, 'success': true, 'result': resultHash }
+                    //         return next(null, req, res, next)
+                    //       })
+                    //     } else {
+                    //       res.status(400)
+                    //       res.body = { 'status': 400, 'success': false, 'result': 'Swap result is not defined' }
+                    //       return next(null, req, res, next)
+                    //     }
+                    //   })
+                    // })
                   })
                 } else {
                   res.status(400)
@@ -1289,7 +1294,164 @@ const models = {
     .catch((err) => {
       console.log(err)
     })
-  }
+  },
+
+
+  /**
+  *  GetBnbBalances( bnb_address, token_uuid )
+  *  -- Get the current balance BEP2 address, for the symbol specified
+  *  -- Get pending transfers that haven't been processed yet
+  */
+  getBnbBalance(req, res, next) {
+    models.descryptPayload(req, res, next, (data) => {
+      let result = models.validateGetBnbBalances(data)
+
+      if(result !== true) {
+        res.status(400)
+        res.body = { 'status': 400, 'success': false, 'result': result }
+        return next(null, req, res, next)
+      }
+
+      const {
+        bnb_address,
+        token_uuid
+      } = data
+
+      models.getTokenInfo(token_uuid, (err, tokenInfo) => {
+        if(err) {
+          console.log(err)
+          res.status(500)
+          res.body = { 'status': 500, 'success': false, 'result': err }
+          return next(null, req, res, next)
+        }
+
+        bnb.getBalance(bnb_address, (err, balances) => {
+          if(err) {
+            console.log(err)
+            res.status(500)
+            res.body = { 'status': 500, 'success': false, 'result': err }
+            return next(null, req, res, next)
+          }
+
+
+          let balance = 0;
+
+          let filteredBalances = balances.filter((balance) => {
+            return balance.symbol === tokenInfo.unique_symbol
+          })
+
+          if(filteredBalances.length > 0) {
+              balance = filteredBalances[0].free
+          }
+
+          models.getPendingBnbBalance(token_uuid, bnb_address, (err, pendingBalance) => {
+            if(err) {
+              console.log(err)
+              res.status(500)
+              res.body = { 'status': 500, 'success': false, 'result': err }
+              return next(null, req, res, next)
+            }
+
+            const returnObj = {
+              balance: parseFloat(balance),
+              pendingBalance: parseFloat(pendingBalance.pending_balance ? pendingBalance.pending_balance : 0)
+            }
+
+            res.status(205)
+            res.body = { 'status': 200, 'success': true, 'result': returnObj }
+            return next(null, req, res, next)
+          })
+        })
+      })
+    })
+  },
+
+  validateGetBnbBalances(body) {
+    let { bnb_address, token_uuid } = body
+
+    if(!bnb_address) {
+      return 'bnb_address is required'
+    }
+
+    if(!token_uuid) {
+      return 'token_uuid is required'
+    }
+
+    return true
+  },
+
+  getPendingBnbBalance(tokenUuid, bnbAddress, callback) {
+    db.oneOrNone('select sum(swaps.amount::numeric - tok.fee_per_swap::numeric) as pending_balance from swaps left join tokens tok on tok.uuid = swaps.token_uuid where swaps.token_uuid = $1 and swaps.bnb_address = $2 and swaps.deposit_transaction_hash is not null and swaps.transfer_transaction_hash is null;', [tokenUuid, bnbAddress])
+    .then((info) => {
+      callback(null, info)
+    })
+    .catch(callback)
+  },
+
+
+  /**
+  *  GetEthBalances( eth_address, token_uuid )
+  *  -- Get the current balance ErC20 address, for the symbol specified
+  *  -- Get pending transfers that haven't been processed yet
+  */
+  getEthBalance(req, res, next) {
+    models.descryptPayload(req, res, next, (data) => {
+      let result = models.validateGetEthbalances(data)
+
+      if(result !== true) {
+        res.status(400)
+        res.body = { 'status': 400, 'success': false, 'result': result }
+        return next(null, req, res, next)
+      }
+
+      const {
+        eth_address,
+        token_uuid
+      } = data
+
+      models.getTokenInfo(token_uuid, (err, tokenInfo) => {
+        if(err) {
+          console.log(err)
+          res.status(500)
+          res.body = { 'status': 500, 'success': false, 'result': err }
+          return next(null, req, res, next)
+        }
+
+        eth.getERC20Balance(eth_address, tokenInfo.erc20_address, (err, balance) => {
+          console.log("THE BALANCE: ", balance)
+          if(err) {
+            console.log(err)
+            res.status(500)
+            res.body = { 'status': 500, 'success': false, 'result': err }
+            return next(null, req, res, next)
+          }
+
+          const returnObj = {
+            balance: parseFloat(balance),
+          }
+
+          res.status(205)
+          res.body = { 'status': 200, 'success': true, 'result': returnObj }
+          return next(null, req, res, next)
+
+        })
+      })
+    })
+  },
+
+  validateGetEthbalances(body) {
+    let { eth_address, token_uuid } = body
+
+    if(!eth_address) {
+      return 'eth_address is required'
+    }
+
+    if(!token_uuid) {
+      return 'token_uuid is required'
+    }
+
+    return true
+  },
 }
 
 String.prototype.hexEncode = function(){

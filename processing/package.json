@@ -1,0 +1,17 @@
+{
+  "name": "fantom-binance",
+  "version": "0.0.1",
+  "description": "Token swap utility for Fantom to Binance Chain",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "antonnell.crypto@gmail.com",
+  "license": "MIT",
+  "dependencies": {
+    "@binance-chain/javascript-sdk": "^2.10.0",
+    "axios": "^0.18.0",
+    "node-pty": "^0.8.1",
+    "pg-promise": "^8.6.5"
+  }
+}

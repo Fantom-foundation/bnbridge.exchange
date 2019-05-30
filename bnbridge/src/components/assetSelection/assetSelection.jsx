@@ -6,7 +6,7 @@ import {
 } from '@material-ui/core'
 
 import Select from '../common/select';
-import Button from '../common/button';
+// import Button from '../common/button';
 
 import {
   TOKENS_UPDATED,
@@ -53,9 +53,24 @@ class AssetSelection extends Component {
       }
     })
 
+    let selectedToken = null
+
+    if(window.location.pathname !== "" && window.location.pathname !== "/") {
+      const symbolToken = window.location.pathname.substr(1)
+      let filteredTokens = tokens.filter((token) => {
+        return token.symbol === symbolToken || token.name === symbolToken
+      })
+
+      if(filteredTokens.length > 0) {
+        selectedToken = filteredTokens[0].uuid
+        this.props.onTokenSelected(selectedToken)
+      }
+    }
+
     this.setState({
       tokens: tokens,
-      tokenOptions: tokenOptions
+      tokenOptions: tokenOptions,
+      token: selectedToken
     })
   };
 
@@ -72,7 +87,6 @@ class AssetSelection extends Component {
   render() {
     const {
       classes,
-      onIssue,
       disabled
     } = this.props
 
@@ -84,7 +98,7 @@ class AssetSelection extends Component {
 
     return (
       <Grid container className={ classes.root }>
-        <Grid item xs={ 9 }>
+        <Grid item xs={ 12 }>
           <Select
             id="token"
             fullWidth={ true }
@@ -97,13 +111,13 @@ class AssetSelection extends Component {
             disabled={ disabled }
           />
         </Grid>
-        <Grid item xs={ 3 } className={ classes.container }>
+        {/*<Grid item xs={ 3 } className={ classes.container }>
           <Button
             label="Issue"
             disabled={ disabled }
             onClick={ onIssue }
           />
-        </Grid>
+        </Grid>*/}
       </Grid>
     )
   }
