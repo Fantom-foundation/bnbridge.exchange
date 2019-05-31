@@ -394,7 +394,7 @@ const models = {
    *  Returns a list of tokens
    */
   getTokens(req, res, next) {
-    db.manyOrNone('select tok.uuid, tok.name, tok.symbol, tok.total_supply, tok.minimum_swap_amount, tok.fee_per_swap, tok.listed, tok.listing_proposed, tok.listing_proposal_uuid, tok.erc20_address, eth.address as eth_address from tokens tok left join eth_accounts eth on eth.uuid = tok.eth_account_uuid where processed is true;')
+    db.manyOrNone('select tok.uuid, tok.name, tok.symbol, tok.total_supply, tok.minimum_swap_amount, tok.fee_per_swap, tok.listed, tok.listing_proposed, tok.listing_proposal_uuid, tok.erc20_address, tok.process_date, eth.address as eth_address from tokens tok left join eth_accounts eth on eth.uuid = tok.eth_account_uuid where processed is true;')
     .then((tokens) => {
       if (!tokens) {
         res.status(404)
@@ -418,7 +418,7 @@ const models = {
    *  Returns a specific token details. Deposit addresses
    */
   getToken(req, res, next) {
-    db.oneOrNone('select tok.uuid, tok.name, tok.symbol, tok.total_supply, tok.minimum_swap_amount, tok.fee_per_swap, tok.erc20_address, eth.address as eth_address from tokens tok left join eth_accounts eth on eth.uuid = tok.eth_account_uuid where tok.uuid = $1 and processed is true;',[req.params.uuid])
+    db.oneOrNone('select tok.uuid, tok.name, tok.symbol, tok.total_supply, tok.minimum_swap_amount, tok.fee_per_swap, tok.erc20_address, tok.process_date, eth.address as eth_address from tokens tok left join eth_accounts eth on eth.uuid = tok.eth_account_uuid where tok.uuid = $1 and processed is true;',[req.params.uuid])
     .then((token) => {
       if (!token) {
         res.status(404)
@@ -452,15 +452,8 @@ const models = {
 
       const data = feesData.data
       let fees = data.filter((fee) => {
-        return ['issueMsg', 'dexList', 'submit_proposal'].includes(fee.msg_type)  //|| fee.fixed_fee_params != null
+        return ['issueMsg', 'dexList', 'submit_proposal'].includes(fee.msg_type)
       })
-      // .map((fee) => {
-      //   if(fee.fixed_fee_params != null) {
-      //     return fee.fixed_fee_params
-      //   } else {
-      //     return fee
-      //   }
-      // })
 
       fees.push({ msg_type: 'list_proposal_deposit', fee: config.list_proposal_deposit })
 
@@ -471,14 +464,12 @@ const models = {
   },
 
   /**
-  * Inserts teh swap record into the DB.
-  * Returns the token deposit address.
+  * check to see if the BNB address for that token exists.
+  * If so, we return the eth address
+  * If not, we create a new address then return it.
   */
   swapToken(req, res, next) {
     models.descryptPayload(req, res, next, (data) => {
-
-      console.log(data)
-
       let result = models.validateSwap(data)
 
       if(result !== true) {
@@ -488,14 +479,10 @@ const models = {
       }
 
       const {
-        token_uuid,
-        bnb_address,
-        eth_address,
-        amount
+        bnb_address
       } = data
 
-
-      models.getTokenSwapInfo(token_uuid, (err, tokenInfo) => {
+      models.getClientAccountForBnbAddress(bnb_address, (err, clientAccount) => {
         if(err) {
           console.log(err)
           res.status(500)
@@ -503,60 +490,47 @@ const models = {
           return next(null, req, res, next)
         }
 
-        if(!tokenInfo) {
-          res.status(400)
-          res.body = { 'status': 400, 'success': false, 'result': 'Unable to get token information' }
-          return next(null, req, res, next)
-        }
-
-        //validate amount only if it is set for the token. Need to figure out who sets this amount up? Manual per token owner?
-        if(tokenInfo.minimum_swap_amount !== null && tokenInfo.minimum_swap_amount !== '') {
-          if(parseFloat(amount) < parseFloat(tokenInfo.minimum_swap_amount)) {
-            res.status(400)
-            res.body = { 'status': 400, 'success': false, 'result': 'Swap amount < minimum swap amount' }
-            return next(null, req, res, next)
-          }
-        }
-
-        models.insertSwap(token_uuid, bnb_address, eth_address, amount, (err, insertResponse) => {
-          if(err) {
-            console.log(err)
-            res.status(500)
-            res.body = { 'status': 500, 'success': false, 'result': err }
-            return next(null, req, res, next)
-          }
-
-          const uuid = insertResponse.uuid
-
-          tokenInfo.swap_uuid = uuid
-
+        console.log(clientAccount)
+        if(clientAccount) {
           res.status(205)
-          res.body = { 'status': 200, 'success': true, 'result': tokenInfo }
+          res.body = { 'status': 200, 'success': true, 'result': clientAccount }
           return next(null, req, res, next)
-        })
+        } else {
+          eth.createAccount((err, account) => {
+            if(err) {
+              console.log(err)
+              res.status(500)
+              res.body = { 'status': 500, 'success': false, 'result': err }
+              return next(null, req, res, next)
+            }
+
+            console.log(account)
+            models.insertClientEthAccount(bnb_address, account, (err, clientAccount) => {
+              if(err) {
+                console.log(err)
+                res.status(500)
+                res.body = { 'status': 500, 'success': false, 'result': err }
+                return next(null, req, res, next)
+              }
+
+              console.log(clientAccount)
+              res.status(205)
+              res.body = { 'status': 200, 'success': true, 'result': clientAccount }
+              return next(null, req, res, next)
+            })
+          })
+        }
       })
     })
   },
 
   validateSwap(body) {
     const {
-      token_uuid,
-      bnb_address,
-      eth_address,
-      amount
+      bnb_address
     } = body
 
-    if(!token_uuid) {
-      return 'token_uuid is required'
-    }
     if(!bnb_address) {
       return 'bnb_address is required'
-    }
-    if(!eth_address) {
-      return 'eth_address is required'
-    }
-    if(!amount) {
-      return 'amount is required'
     }
 
     if(!bnb.validateAddress(bnb_address)) {
@@ -566,25 +540,36 @@ const models = {
     return true
   },
 
-  insertSwap(tokenUuuid, bnbAddress, ethAddress, amount, callback) {
-    db.oneOrNone('insert into swaps (uuid, token_uuid, eth_address, bnb_address, amount, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, now()) returning uuid;', [tokenUuuid, ethAddress, bnbAddress, amount])
+  getClientAccountForBnbAddress(bnbAddress, callback) {
+    db.oneOrNone('select ca.uuid, ca.bnb_address, cea.address as eth_address from client_accounts ca left join client_eth_accounts cea on cea.uuid = ca.client_eth_account_uuid where ca.bnb_address = $1;', [bnbAddress])
     .then((response) => {
       callback(null, response)
     })
     .catch(callback)
   },
 
-  getTokenSwapInfo(tokenUuuid, callback) {
-    db.oneOrNone('select tok.uuid, tok.name, tok.symbol, tok.unique_symbol, tok.total_supply, tok.fee_per_swap, tok.minimum_swap_amount, tok.erc20_address, eth.address as eth_address, bnb.address as bnb_address from tokens tok left join eth_accounts eth on eth.uuid = tok.eth_account_uuid left join bnb_accounts bnb on bnb.uuid = tok.bnb_account_uuid where tok.uuid = $1;', [tokenUuuid])
-    .then((response) => {
-      callback(null, response)
+  insertClientEthAccount(bnbAddress, ethAccount, callback) {
+    db.oneOrNone('insert into client_eth_accounts(uuid, private_key, address, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, now()) returning uuid, address;', [ethAccount.privateKey, ethAccount.address])
+    .then((returnedEthAccount) => {
+      db.oneOrNone('insert into client_accounts(uuid, bnb_address, client_eth_account_uuid, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, now()) returning uuid, bnb_address;', [bnbAddress, returnedEthAccount.uuid])
+      .then((clientAccount) => {
+        const returnObj = {
+          uuid: clientAccount.uuid,
+          bnb_address: clientAccount.bnb_address,
+          eth_address: returnedEthAccount.address
+        }
+        callback(null, returnObj)
+      })
+      .catch(callback)
     })
     .catch(callback)
   },
 
   /**
-  * Checks to see if a deposit was made worth amount from erc20 address defined.
-  * If true, transfers the equivalent amoutn to the bnb address defined.
+  * Take the token with the eth address, check to see if a transfer was done.
+  * Validate that against the swaps that have been recorded previously.
+  * Insert all new deposits into swaps.
+  * Return all new deposits.
   */
   finalizeSwap(req, res, next) {
     models.descryptPayload(req, res, next, (data) => {
@@ -597,7 +582,12 @@ const models = {
         return next(null, req, res, next)
       }
 
-      models.getTokenSwap(data.uuid, (err, swapInfo) => {
+      const {
+        uuid,
+        token_uuid
+      } = data
+
+      models.getClientAccountForUuid(uuid, (err, clientAccount) => {
         if(err) {
           console.log(err)
           res.status(500)
@@ -605,7 +595,13 @@ const models = {
           return next(null, req, res, next)
         }
 
-        models.getTokenSwapInfo(swapInfo.token_uuid, (err, tokenInfo) => {
+        if(!clientAccount) {
+          res.status(400)
+          res.body = { 'status': 400, 'success': false, 'result': 'Unable to find swap details' }
+          return next(null, req, res, next)
+        }
+
+        models.getTokenInfoForSwap(token_uuid, (err, tokenInfo) => {
           if(err) {
             console.log(err)
             res.status(500)
@@ -613,123 +609,67 @@ const models = {
             return next(null, req, res, next)
           }
 
-          eth.getTransactions(tokenInfo.erc20_address, swapInfo.eth_address, tokenInfo.eth_address, swapInfo.amount, (err, transactions) => {
+          if(!tokenInfo) {
+            res.status(400)
+            res.body = { 'status': 400, 'success': false, 'result': 'Unable to find token details' }
+            return next(null, req, res, next)
+          }
+
+          async.parallel([
+            (callback) => { eth.getTransactionsForAddress(tokenInfo.erc20_address, clientAccount.eth_address, callback) },
+            (callback) => { models.getTransactionHashs(token_uuid, uuid, callback) }
+          ], (err, data) => {
             if(err) {
               console.log(err)
               res.status(500)
-              res.body = { 'status': 500, 'success': false, 'result': err }
+              res.body = { 'status': 500, 'success': false, 'result': 'Unable to process request: '+err }
               return next(null, req, res, next)
             }
 
-            console.log('ERC0: ', tokenInfo.erc20_address)
-            console.log('From: ', swapInfo.eth_address)
-            console.log('To: ', tokenInfo.eth_address)
-            console.log('Amount: ', swapInfo.amount)
+            console.log(data)
 
-            if(transactions.length > 0) {
-              models.getTransactionHashs(swapInfo.eth_address, tokenInfo.erc20_address, (err, previousTransactions) => {
-                if(err) {
-                  console.log(err)
-                  res.status(500)
-                  res.body = { 'status': 500, 'success': false, 'result': err }
-                  return next(null, req, res, next)
-                }
+            const ethTransactions = data[0]
+            const swaps = data[1]
 
-                //checck whether the transfer was done to fund a previous swap
-                let acceptableTransactions = []
-                if(transactions) {
-                  for(var i = 0; i < transactions.length; i++) {
-                    let used = false
-                    if(previousTransactions) {
-                      for(var j = 0; j < previousTransactions.length; j++) {
-                        if(transactions[i].transactionHash == previousTransactions[j].deposit_transaction_hash) {
-                          used = true
-                        }
-                      }
-                    }
-                    if(!used) {
-                      acceptableTransactions.push(transactions[i])
-                    }
-                  }
-                }
-
-                //if we find a successful transaction, we can transfer the funds
-                if(acceptableTransactions.length > 0) {
-                  models.updateWithDepositTransactionHash(swapInfo.uuid, acceptableTransactions[0].transactionHash, (err) => {
-                    if(err) {
-                      console.log(err)
-                      res.status(500)
-                      res.body = { 'status': 500, 'success': false, 'result': err }
-                      return next(null, req, res, next)
-                    }
-
-                    res.status(205)
-                    res.body = { 'status': 200, 'success': true, 'result': 'Successfully processed' }
-                    return next(null, req, res, next)
-
-                    // models.getKey(tokenInfo.bnb_address, (err, key) => {
-                    //   if(err || !key) {
-                    //     console.log(err)
-                    //     res.status(500)
-                    //     res.body = { 'status': 500, 'success': false, 'result': 'Unable to retrieve key' }
-                    //     return next(null, req, res, next)
-                    //   }
-                    //
-                    //   let transferAmount = swapInfo.amount
-                    //
-                    //   if(tokenInfo.fee_per_swap && tokenInfo.fee_per_swap != '') {
-                    //     transferAmount = parseFloat(swapInfo.amount) - parseFloat(tokenInfo.fee_per_swap)
-                    //   }
-                    //
-                    //   bnb.transfer(key.mnemonic, swapInfo.bnb_address, transferAmount, tokenInfo.unique_symbol, 'BNBridge Swap', (err, swapResult) => {
-                    //     if(err) {
-                    //       console.log(err)
-                    //       res.status(500)
-                    //       res.body = { 'status': 500, 'success': false, 'result': err }
-                    //
-                    //       models.revertUpdateWithDepositTransactionHash(swapInfo.uuid, acceptableTransactions[0].transactionHash, (err) => {
-                    //         if(err) {
-                    //           console.log(err)
-                    //         }
-                    //       })
-                    //
-                    //       return next(null, req, res, next)
-                    //     }
-                    //
-                    //     if(swapResult && swapResult.result && swapResult.result.length > 0) {
-                    //       let resultHash = swapResult.result[0].hash
-                    //
-                    //       models.updateWithTransferTransactionHash(swapInfo.uuid, resultHash, (err) => {
-                    //         if(err) {
-                    //           console.log(err)
-                    //           res.status(500)
-                    //           res.body = { 'status': 500, 'success': false, 'result': err }
-                    //           return next(null, req, res, next)
-                    //         }
-                    //
-                    //         res.status(205)
-                    //         res.body = { 'status': 200, 'success': true, 'result': resultHash }
-                    //         return next(null, req, res, next)
-                    //       })
-                    //     } else {
-                    //       res.status(400)
-                    //       res.body = { 'status': 400, 'success': false, 'result': 'Swap result is not defined' }
-                    //       return next(null, req, res, next)
-                    //     }
-                    //   })
-                    // })
-                  })
-                } else {
-                  res.status(400)
-                  res.body = { 'status': 400, 'success': false, 'result': 'Unable to find the transaction' }
-                  return next(null, req, res, next)
-                }
-              })
-            } else {
+            if(!ethTransactions || ethTransactions.length === 0) {
               res.status(400)
-              res.body = { 'status': 400, 'success': false, 'result': 'Unable to find the transaction' }
+              res.body = { 'status': 400, 'success': false, 'result': 'Unable to find a deposit' }
               return next(null, req, res, next)
             }
+
+            const newTransactions = ethTransactions.filter((ethTransaction) => {
+              const thisTransaction = swaps.filter((swap) => {
+                return swap.deposit_transaction_hash === ethTransaction.transactionHash
+              })
+
+              if(thisTransaction.length > 0) {
+                return false
+              } else {
+                return true
+              }
+            })
+
+            console.log(newTransactions)
+
+            if(newTransactions.length === 0) {
+              res.status(400)
+              res.body = { 'status': 400, 'success': false, 'result': 'Unable to find any new deposits' }
+              return next(null, req, res, next)
+            }
+
+            models.insertSwaps(newTransactions, clientAccount, token_uuid,  (err, newSwaps) => {
+              if(err) {
+                console.log(err)
+                res.status(500)
+                res.body = { 'status': 500, 'success': false, 'result': err }
+                return next(null, req, res, next)
+              }
+
+              console.log(newSwaps)
+              res.status(205)
+              res.body = { 'status': 200, 'success': true, 'result': newSwaps }
+              return next(null, req, res, next)
+            })
           })
         })
       })
@@ -738,48 +678,70 @@ const models = {
 
   validateFinalizeSwap(body) {
     const {
-      uuid
+      uuid,
+      token_uuid
     } = body
 
     if(!uuid) {
       return 'uuid is required'
     }
 
+    if(!token_uuid) {
+      return 'token_uuid is required'
+    }
+
     return true
   },
 
-  getTokenSwap(uuid, callback) {
-    db.oneOrNone('select * from swaps where uuid = $1;', [uuid])
+  getClientAccountForUuid(uuid, callback) {
+    db.oneOrNone('select ca.uuid, ca.bnb_address, cea.address as eth_address from client_accounts ca left join client_eth_accounts cea on cea.uuid = ca.client_eth_account_uuid where ca.uuid = $1;', [uuid])
     .then((response) => {
       callback(null, response)
     })
     .catch(callback)
   },
 
-  getTransactionHashs(ethAddress, erc20Address, callback) {
-    db.manyOrNone('select * from swaps where eth_address = $1 and token_uuid in (select uuid from tokens where erc20_address = $2);', [ethAddress, erc20Address])
+  getTokenInfoForSwap(tokenUuid, callback) {
+    db.oneOrNone('select tok.uuid, tok.name, tok.symbol, tok.unique_symbol, tok.total_supply, tok.fee_per_swap, tok.minimum_swap_amount, tok.erc20_address from tokens tok where tok.uuid = $1;', [tokenUuid])
     .then((response) => {
       callback(null, response)
     })
     .catch(callback)
   },
 
-  updateWithDepositTransactionHash(uuid, hash, callback) {
-    db.none('update swaps set deposit_transaction_hash = $2 where uuid = $1;', [uuid, hash])
-    .then(callback)
+  getTransactionHashs(tokenUuid, clientAccountUuid, callback) {
+    db.manyOrNone('select * from swaps where token_uuid = $1 and client_account_uuid = $2;', [tokenUuid, clientAccountUuid])
+    .then((response) => {
+      callback(null, response)
+    })
     .catch(callback)
   },
 
-  revertUpdateWithDepositTransactionHash(uuid, hash, callback) {
-    db.none('update swaps set deposit_transaction_hash = null where uuid = $1 and deposit_transaction_hash = $2 and transfer_transaction_hash is null;', [uuid, hash])
-    .then(callback)
-    .catch(callback)
+  insertSwaps(transactions, clientAccount, tokenUuid, callback) {
+    async.map(transactions,
+      function (transaction, callbackInner) {
+        models.insertSwap(transaction, clientAccount, tokenUuid, callbackInner)
+      },
+      function(err, result) {
+        if (err) {
+          console.log(err)
+          return callback(err)
+        }
+
+        console.log(result)
+        callback(null, result)
+      }
+    )
   },
 
-  updateWithTransferTransactionHash(uuid, hash,  callback) {
-    db.none('update swaps set transfer_transaction_hash = $2 where uuid = $1;', [uuid, hash])
-    .then(callback)
-    .catch(callback)
+  insertSwap(transaction, clientAccount, tokenUuid, callback) {
+    db.oneOrNone('insert into swaps (uuid, token_uuid, eth_address, bnb_address, amount, client_account_uuid, deposit_transaction_hash, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, $6, now()) returning uuid, eth_address, amount, deposit_transaction_hash;', [tokenUuid, clientAccount.eth_address, clientAccount.bnb_address, transaction.amount, clientAccount.uuid, transaction.transactionHash])
+    .then((response) => {
+      callback(null, response)
+    })
+    .catch((err) => {
+      callback(err)
+    })
   },
 
 

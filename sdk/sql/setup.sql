@@ -46,6 +46,7 @@ drop table if exists swaps;
 create table swaps (
   uuid char(36) primary key,
   token_uuid char(36),
+  client_account_uuid char(36),
   eth_address varchar(64),
   bnb_address varchar(64),
   amount varchar(32),
@@ -71,5 +72,23 @@ create table list_proposals (
 	proposal_id bigint,
   processed boolean,
   voting_status varchar(32),
+  created timestamp
+);
+
+
+drop table if exists client_accounts;
+create table client_accounts (
+  uuid char(36) primary key,
+	bnb_address varchar(64),
+	client_eth_account_uuid char(36),
+  created timestamp
+);
+
+
+drop table if exists client_eth_accounts;
+create table client_eth_accounts (
+  uuid char(36) primary key,
+  private_key varchar(128),
+  address varchar(64),
   created timestamp
 );

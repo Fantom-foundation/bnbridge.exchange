@@ -1,9 +1,12 @@
 import React, { Component } from "react";
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
+import moment from 'moment';
 import {
   Grid,
-  Typography
+  Typography,
+  IconButton,
+  SvgIcon
 } from '@material-ui/core'
 import config from '../../config'
 
@@ -21,9 +24,7 @@ import {
   TOKEN_SWAP_FINALIZED,
   TOKENS_UPDATED,
   GET_BNB_BALANCES,
-  BNB_BALANCES_UPDATED,
-  GET_ETH_BALANCES,
-  ETH_BALANCES_UPDATED
+  BNB_BALANCES_UPDATED
 } from '../../constants'
 
 import Store from "../../stores";
@@ -76,6 +77,17 @@ const styles = theme => ({
   },
 });
 
+function CopyIcon(props) {
+  return (
+    <SvgIcon {...props}>
+      <path
+        fill={'#6a6a6a'}
+        d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm-1 4H8c-1.1 0-1.99.9-1.99 2L6 21c0 1.1.89 2 1.99 2H19c1.1 0 2-.9 2-2V11l-6-6zM8 21V7h6v5h5v9H8z"
+      />
+    </SvgIcon>
+  );
+}
+
 
 class Swap extends Component {
   state = {
@@ -85,17 +97,9 @@ class Swap extends Component {
     tokenError: false,
     bnbAddress: '',
     bnbAddressError: false,
-    erc20address: '',
-    erc20AddressError: false,
-    amount: '',
-    amountError: false,
-    amountErrorMessage: '',
-    amountHelperText: '',
     tokens: [],
     selectedToken: null,
-    receiveAmount: null,
     bnbBalances: null,
-    ethBalances: null
   };
 
   componentWillMount() {
@@ -103,7 +107,6 @@ class Swap extends Component {
     emitter.on(TOKEN_SWAPPED, this.tokenSwapped);
     emitter.on(TOKEN_SWAP_FINALIZED, this.tokenSwapFinalized);
     emitter.on(BNB_BALANCES_UPDATED, this.bnbBalancesUpdated);
-    emitter.on(ETH_BALANCES_UPDATED, this.ethBalancesUpdated);
     emitter.on(ERROR, this.error);
   };
 
@@ -112,7 +115,6 @@ class Swap extends Component {
     emitter.removeListener(TOKEN_SWAPPED, this.tokenSwapped);
     emitter.removeListener(TOKEN_SWAP_FINALIZED, this.tokenSwapFinalized);
     emitter.removeListener(BNB_BALANCES_UPDATED, this.bnbBalancesUpdated);
-    emitter.removeListener(ETH_BALANCES_UPDATED, this.ethBalancesUpdated);
     emitter.removeListener(ERROR, this.error);
   };
 
@@ -128,10 +130,6 @@ class Swap extends Component {
     this.setState({ bnbBalances: data, loading: false })
   };
 
-  ethBalancesUpdated = (data) => {
-    this.setState({ ethBalances: data, loading: false })
-  };
-
   error = (err) => {
     this.props.showError(err)
     this.setState({ loading: false })
@@ -140,18 +138,18 @@ class Swap extends Component {
   tokenSwapped = (data) => {
     this.setState({
       page: 1,
-      swapUuid: data.swap_uuid,
+      clientUuid: data.uuid,
       ethDepositAddress: data.eth_address,
-      symbol: data.symbol,
       loading: false
    })
   };
 
-  tokenSwapFinalized = (transactionHash) => {
+  tokenSwapFinalized = (transactions) => {
+    console.log(transactions)
     this.setState({
       page: 2,
       loading: false,
-      transactionHash: transactionHash
+      transactions: transactions
     })
   };
 
@@ -160,15 +158,11 @@ class Swap extends Component {
     const {
       token,
       bnbAddress,
-      erc20address,
-      amount,
     } = this.state
 
     const content = {
       token_uuid: token,
       bnb_address: bnbAddress,
-      eth_address: erc20address,
-      amount: amount
     }
     dispatcher.dispatch({type: SWAP_TOKEN, content })
 
@@ -177,11 +171,13 @@ class Swap extends Component {
 
   callFinalizeSwapToken = () => {
     const {
-      swapUuid
+      clientUuid,
+      selectedToken
     } = this.state
 
     const content = {
-      uuid: swapUuid,
+      uuid: clientUuid,
+      token_uuid: selectedToken.uuid
     }
     dispatcher.dispatch({type: FINALIZE_SWAP_TOKEN, content })
 
@@ -193,17 +189,11 @@ class Swap extends Component {
     this.setState({
       tokenError: false,
       bnbAddressError: false,
-      erc20AddressError: false,
-      amountError: false,
-      amountErrorMessage: ''
     })
 
     const {
       token,
       bnbAddress,
-      erc20address,
-      amount,
-      tokens
     } = this.state
 
     let error = false
@@ -216,31 +206,8 @@ class Swap extends Component {
       this.setState({ bnbAddressError: true })
       error = true
     }
-    if(!erc20address || erc20address === '') {
-      this.setState({ erc20AddressError: true })
-      error = true
-    }
-    if(!amount || amount === '') {
-      this.setState({ amountError: true })
-      error = true
-    }
 
-    let theToken = tokens.filter((tok) => {
-      return tok.uuid === token
-    })
-
-    if(theToken && theToken.length > 0) {
-
-      if(theToken[0].minimum_swap_amount != null && parseFloat(amount) < parseFloat(theToken[0].minimum_swap_amount)) {
-        this.setState({ amountError: true, amountErrorMessage: 'Amount < Minimum Swap Amount: '+theToken[0].minimum_swap_amount+' '+theToken[0].symbol })
-        error = true
-      }
-
-      return !error
-    }
-
-    return false
-
+    return !error
   };
 
   onNext = (event) => {
@@ -268,16 +235,8 @@ class Swap extends Component {
       tokenError: false,
       bnbAddress: '',
       bnbAddressError: false,
-      erc20address: '',
-      erc20AddressError: false,
-      amount: '',
-      amountError: false,
-      amountErrorMessage: '',
-      amountHelperText: '',
       selectedToken: null,
-      receiveAmount: null,
       bnbBalances: null,
-      ethBalances: null
     })
   };
 
@@ -285,44 +244,22 @@ class Swap extends Component {
     this.setState({ page: 0 })
   };
 
-  onHashClick = (event) => {
-    const {
-      transactionHash
-    } = this.state
-
-    window.open(config.explorerURL+transactionHash, "_blank")
+  onHashClick = (hash) => {
+    window.open(config.etherscanURL+hash, "_blank")
   };
 
   onTokenSelected = (value) => {
 
     const {
       tokens,
-      amount,
       bnbAddress,
-      erc20address
     } = this.state
 
     let theToken = tokens.filter((tok) => {
       return tok.uuid === value
     })
 
-    let amountHelperText = ''
-
-    if(theToken && theToken.length > 0) {
-      if(theToken[0].minimum_swap_amount != null) {
-        amountHelperText = 'Minimum amount is '+theToken[0].minimum_swap_amount+' '+theToken[0].symbol
-      }
-
-      if(theToken[0].fee_per_swap != null && amount) {
-        this.setState({ receiveAmount: parseFloat(amount) - parseFloat(theToken[0].fee_per_swap)  })
-      } else if (theToken[0].fee_per_swap == null && amount) {
-        this.setState({ receiveAmount: parseFloat(amount) })
-      } else {
-        this.setState({ receiveAmount: '' })
-      }
-    }
-
-    this.setState({ token: value, selectedToken: theToken[0], amountHelperText: amountHelperText })
+    this.setState({ token: value, selectedToken: theToken[0] /*, amountHelperText: amountHelperText */ })
 
     if(theToken.length > 0  && bnbAddress && bnbAddress !== "" && bnbAddress.length === Config.bnbAddressLength) {
       const content = {
@@ -332,37 +269,12 @@ class Swap extends Component {
       dispatcher.dispatch({type: GET_BNB_BALANCES, content })
       this.setState({ loading: true, bnbBalances: null })
     }
-
-    if(theToken.length > 0  && erc20address && erc20address !== "" && erc20address.length === Config.erc20addressLength) {
-      const content = {
-        eth_address: erc20address,
-        token_uuid: theToken[0].uuid
-      }
-      dispatcher.dispatch({type: GET_ETH_BALANCES, content })
-      this.setState({ loading: true, ethBalances: null })
-    }
   };
 
   onChange = (event) => {
     let val = []
     val[event.target.id] = event.target.value
     this.setState(val)
-
-    if(event.target.id === 'amount') {
-      const {
-        selectedToken
-      } = this.state
-
-      if(selectedToken != null) {
-        if(selectedToken.fee_per_swap != null) {
-          this.setState({ receiveAmount: parseFloat(event.target.value) - parseFloat(selectedToken.fee_per_swap)  })
-        } else {
-          this.setState({ receiveAmount: parseFloat(event.target.value) })
-        }
-      } else {
-        this.setState({ receiveAmount: '' })
-      }
-    }
 
     if(event.target.id === 'bnbAddress') {
 
@@ -379,21 +291,26 @@ class Swap extends Component {
         this.setState({ loading: true, bnbBalances: null })
       }
     }
+  };
 
-    if(event.target.id === 'erc20address') {
+  onCopy = () => {
+    var elm = document.getElementById("depositAddress");
+    let range;
+    // for Internet Explorer
 
-      const {
-        selectedToken
-      } = this.state
-
-      if(selectedToken  && event.target.value && event.target.value !== "" && event.target.value.length === Config.erc20addressLength) {
-        const content = {
-          eth_address: event.target.value,
-          token_uuid: selectedToken.uuid
-        }
-        dispatcher.dispatch({type: GET_ETH_BALANCES, content })
-        this.setState({ loading: true, ethBalances: null })
-      }
+    if (document.body.createTextRange) {
+      range = document.body.createTextRange();
+      range.moveToElementText(elm);
+      range.select();
+      document.execCommand("Copy");
+    } else if (window.getSelection) {
+      // other browsers
+      var selection = window.getSelection();
+      range = document.createRange();
+      range.selectNodeContents(elm);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      document.execCommand("Copy");
     }
   };
 
@@ -402,15 +319,8 @@ class Swap extends Component {
     const {
       bnbAddress,
       bnbAddressError,
-      erc20address,
-      erc20AddressError,
-      amount,
-      amountError,
-      amountErrorMessage,
-      amountHelperText,
       loading,
       bnbBalances,
-      ethBalances,
       selectedToken
     } = this.state
 
@@ -425,7 +335,7 @@ class Swap extends Component {
           <Input
             id='bnbAddress'
             fullWidth={ true }
-            label="BNB receive address"
+            label="BNB Address"
             placeholder="eg: bnb1mmxvnhkyqrvd2dpskvsgl8lmft4tnrcs97apr3"
             value={ bnbAddress }
             error={ bnbAddressError }
@@ -444,49 +354,14 @@ class Swap extends Component {
             </React.Fragment>
           }
         </Grid>
-        <Grid item xs={ 12 }>
-          <Input
-            id='erc20address'
-            fullWidth={ true }
-            label="ERC20 from address"
-            placeholder="eg: 0x0dE0BCb0703ff8F1aEb8C892eDbE692683bD8030"
-            value={ erc20address }
-            error={ erc20AddressError }
-            onChange={ this.onChange }
-            disabled={ loading }
-          />
-          {
-            ethBalances &&
-            <React.Fragment>
-              <Typography>
-                Current {selectedToken.name} Balance: { ethBalances.balance } { selectedToken.symbol }
-              </Typography>
-            </React.Fragment>
-          }
-        </Grid>
-        <Grid item xs={ 12 }>
-          <Input
-            id='amount'
-            fullWidth={ true }
-            label="Amount"
-            placeholder="eg: 100"
-            value={ amount }
-            error={ amountError }
-            onChange={ this.onChange }
-            helpertext={ amountErrorMessage && amountErrorMessage !== '' ? amountErrorMessage : amountHelperText }
-            disabled={ loading }
-          />
-        </Grid>
       </React.Fragment>
     )
   };
 
   renderPage1 = () => {
     const {
-      amount,
-      symbol,
+      selectedToken,
       ethDepositAddress,
-      erc20address
     } = this.state
 
     const {
@@ -500,22 +375,22 @@ class Swap extends Component {
             Here's what you need to do next:
           </Typography>
           <Typography className={ classes.instructionBold }>
-            Transfer {amount} {symbol}-ERC20
-          </Typography>
-          <Typography className={ classes.instructions }>
-            from
-          </Typography>
-          <Typography className={ classes.instructionBold }>
-            {erc20address}
+            Transfer your {selectedToken.symbol}-ERC20
           </Typography>
           <Typography className={ classes.instructions }>
             to
           </Typography>
           <Typography className={ classes.instructionBold }>
-            {ethDepositAddress}
-          </Typography>
-          <Typography className={ classes.instructionUnderlined }>
-            Please ensure that the amount received by the contract is {amount} {symbol}-ERC20
+            <div id='depositAddress'>{ethDepositAddress}</div>
+            <IconButton
+              style={{
+                verticalAlign: "top",
+                marginRight: "-5px"
+              }}
+              onClick={this.onCopy}
+            >
+              <CopyIcon/>
+            </IconButton>
           </Typography>
           <Typography className={ classes.instructionUnderlined }>
             After you've completed the transfer, click the "NEXT" button so we can verify your transaction.
@@ -526,6 +401,11 @@ class Swap extends Component {
   };
 
   renderPage2 = () => {
+
+    const {
+      selectedToken
+    } = this.state
+
     const {
       classes
     } = this.props
@@ -534,14 +414,62 @@ class Swap extends Component {
       <React.Fragment>
         <Grid item xs={ 12 } className={ classes.frame }>
           <Typography className={ classes.instructionBold }>
-            Swap request completed
+            Swap request pending
           </Typography>
+          { selectedToken.process_date && <Typography className={ classes.instructions }>
+            The swaps will be processed from <b>{moment(selectedToken.process_date).format('hha ZZ')}</b> on <b>{moment(selectedToken.process_date).format('DD MMM YYYY')}</b>
+          </Typography>}
           <Typography className={ classes.instructions }>
-            Your transaction was successful. You will receive your tokens in your Binance address when they are released.
+            We have added the following transaction/s to our log for your address:
           </Typography>
+          { this.renderTransactions() }
+          { this.renderTotals() }
         </Grid>
       </React.Fragment>
     )
+  };
+
+  renderTotals = () => {
+    const {
+      transactions,
+      selectedToken,
+      bnbAddress
+    } = this.state
+
+    const {
+      classes
+    } = this.props
+
+    const reducer = (accumulator, currentValue) => accumulator + parseFloat(currentValue.amount);
+    const totalAmount = transactions.reduce(reducer, 0)
+
+    return (
+      <React.Fragment>
+        <Typography className={ classes.instructions }>
+          You will receive another <b>{totalAmount} {selectedToken.symbol}-BEP2</b> in your address <b>{bnbAddress}</b>
+        </Typography>
+      </React.Fragment>
+    )
+  };
+
+  renderTransactions = () => {
+    const {
+      transactions,
+      selectedToken
+    } = this.state
+
+    const {
+      classes
+    } = this.props
+
+    return transactions.map((transaction) => {
+      return (
+        <React.Fragment>
+          <Typography className={ classes.hash } onClick={ (event) => { this.onHashClick(transaction.deposit_transaction_hash); } }>
+            <b>{transaction.amount} {selectedToken.symbol}-ERC</b> from <b>{transaction.eth_address}</b>
+          </Typography>
+        </React.Fragment>)
+    })
   };
 
   render() {
@@ -552,8 +480,8 @@ class Swap extends Component {
     const {
       page,
       loading,
-      receiveAmount,
-      selectedToken
+      // receiveAmount,
+      // selectedToken
     } = this.state
 
     return (
@@ -562,22 +490,7 @@ class Swap extends Component {
         { page === 0 && this.renderPage0() }
         { page === 1 && this.renderPage1() }
         { page === 2 && this.renderPage2() }
-        { page > 0 &&
-          <Grid item xs={ 8 } align='left' className={ classes.button }>
-            <Button
-              label="Back"
-              disabled={ loading }
-              onClick={ this.onBack }
-            />
-          </Grid>
-        }
-        {
-            (page === 0 && receiveAmount > 0 && selectedToken) &&
-            <Grid item xs={ 8 }>
-              <Typography className={ classes.disclaimer } noWrap >You will receive {receiveAmount} {selectedToken.symbol}-BEP2</Typography>
-            </Grid>
-        }
-        <Grid item xs={ (page > 0 || (receiveAmount > 0 && selectedToken)) ? 4 : 12 } align='right' className={ classes.button }>
+        <Grid item xs={ 12 } align='right' className={ classes.button }>
           <Button
             fullWidth={true}
             label={ page === 2 ? "Done" : "Next" }
