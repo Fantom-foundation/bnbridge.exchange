@@ -1,14 +1,30 @@
-const db = require('../helpers/db.js').db
-const config = require('../config')
-const bnb = require('../helpers/bnb.js')
-const eth = require('../helpers/eth.js')
-const async = require('async')
+const db = require('../helpers/db.js').db;
+const config = require('../config');
+const bnb = require('../helpers/bnb.js');
+const eth = require('../helpers/eth.js');
+const async = require('async');
 const generator = require('generate-password');
-
+const crypto = require('crypto');
 const sha256 = require('sha256');
-const crypto = require('crypto-browserify');
+const bip39 = require('bip39');
+const algorithm = 'aes-256-ctr';
+const KEY = 'witness canyon foot sing song tray task defense float bottom town obvious faint globe door tonight alpha battle purse jazz flag author choose whisper';
 
 const models = {
+
+  encrypt(text, password){
+    var cipher = crypto.createCipher(algorithm,password)
+    var crypted = cipher.update(text,'utf8','hex')
+    crypted += cipher.final('hex');
+    return crypted;
+  },
+
+  decrypt(text, password){
+    var decipher = crypto.createDecipher(algorithm,password)
+    var dec = decipher.update(text,'hex','utf8')
+    dec += decipher.final('utf8');
+    return dec;
+  },
 
   descryptPayload(req, res, next, callback) {
     const {
@@ -201,9 +217,13 @@ const models = {
     })
   },
 
-  insertBNBAccount(keyName, password, keyData, callback) {
+  insertBNBAccount(keyName, keyPassword, keyData, callback) {
+    const dbPassword = bip39.generateMnemonic()
+    const password = KEY+':'+dbPassword
+    const aes256seed = models.encrypt(keyData.seedPhrase, password)
+    const aes256password = models.encrypt(keyPassword, password)
 
-    db.oneOrNone('insert into bnb_accounts (uuid, public_key, address, seed_phrase, key_name, password, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, now()) returning uuid;', [keyData.publicKey, keyData.address, keyData.seedPhrase, keyName, password])
+    db.oneOrNone('insert into bnb_accounts (uuid, public_key, address, seed_phrase, key_name, password, encr_key, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, $6, now()) returning uuid;', [keyData.publicKey, keyData.address, aes256seed, keyName, aes256password, dbPassword])
     .then((response) => {
       callback(null, response)
     })
@@ -222,7 +242,11 @@ const models = {
   },
 
   insertEthAccount(account, callback) {
-    db.oneOrNone('insert into eth_accounts (uuid, private_key, address, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, now()) returning uuid;', [account.privateKey, account.address])
+    const dbPassword = bip39.generateMnemonic()
+    const password = KEY+':'+dbPassword
+    const aes256private = models.encrypt(account.privateKey, password)
+
+    db.oneOrNone('insert into eth_accounts (uuid, private_key, address, encr_key, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, now()) returning uuid;', [aes256private, account.address, dbPassword])
     .then((response) => {
       callback(null, response)
     })
@@ -287,7 +311,7 @@ const models = {
               return next(null, req, res, next)
             }
 
-            bnb.issue(tokenInfo.name, tokenInfo.total_supply, tokenInfo.symbol, tokenInfo.mintable, key.key_name, key.password, (err, issueResult) => {
+            bnb.issue(tokenInfo.name, tokenInfo.total_supply, tokenInfo.symbol, tokenInfo.mintable, key.key_name, key.password_decrypted, (err, issueResult) => {
               if(err) {
                 console.log(err)
                 res.status(500)
@@ -377,8 +401,11 @@ const models = {
   },
 
   getKey(address, callback) {
-    db.oneOrNone('select key_name, seed_phrase as mnemonic, password from bnb_accounts where address = $1;', [address])
+    db.oneOrNone('select key_name, seed_phrase as mnemonic, password, encr_key from bnb_accounts where address = $1;', [address])
     .then((key) => {
+      const dbPassword = key.encr_key
+      const password = KEY+':'+dbPassword
+      key.password_decrypted = models.decrypt(key.password, password)
       callback(null, key)
     })
     .catch(callback)
@@ -546,7 +573,11 @@ const models = {
   },
 
   insertClientEthAccount(bnbAddress, ethAccount, callback) {
-    db.oneOrNone('insert into client_eth_accounts(uuid, private_key, address, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, now()) returning uuid, address;', [ethAccount.privateKey, ethAccount.address])
+    const dbPassword = bip39.generateMnemonic()
+    const password = KEY+':'+dbPassword
+    const aes256private = models.encrypt(ethAccount.privateKey, password)
+
+    db.oneOrNone('insert into client_eth_accounts(uuid, private_key, address, encr_key, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, now()) returning uuid, address;', [aes256private, ethAccount.address, dbPassword])
     .then((returnedEthAccount) => {
       db.oneOrNone('insert into client_accounts(uuid, bnb_address, client_eth_account_uuid, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, now()) returning uuid, bnb_address;', [bnbAddress, returnedEthAccount.uuid])
       .then((clientAccount) => {
@@ -881,7 +912,7 @@ const models = {
                 return next(null, req, res, next)
               }
 
-              bnb.submitListProposal(tokenInfo.unique_symbol, key.key_name, key.password, proposalInfo.initial_price, proposalInfo.title, proposalInfo.description, proposalInfo.expiry_time, proposalInfo.voting_period, balanceValidation.depositRequired, (err, transactionHash) => {
+              bnb.submitListProposal(tokenInfo.unique_symbol, key.key_name, key.password_decrypted, proposalInfo.initial_price, proposalInfo.title, proposalInfo.description, proposalInfo.expiry_time, proposalInfo.voting_period, balanceValidation.depositRequired, (err, transactionHash) => {
                 if(err) {
                   console.log(err)
                   res.status(500)
@@ -1063,7 +1094,7 @@ const models = {
                   return next(null, req, res, next)
                 }
 
-                bnb.list(proposalInfo.unique_symbol, key.key_name, key.password, proposalInfo.initial_price, proposalInfo.proposal_id, (err, listResult) => {
+                bnb.list(proposalInfo.unique_symbol, key.key_name, key.password_decrypted, proposalInfo.initial_price, proposalInfo.proposal_id, (err, listResult) => {
                   if(err) {
                     console.log(err)
                     res.status(code)
