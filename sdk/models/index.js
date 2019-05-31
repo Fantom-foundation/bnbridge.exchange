@@ -490,7 +490,6 @@ const models = {
           return next(null, req, res, next)
         }
 
-        console.log(clientAccount)
         if(clientAccount) {
           res.status(205)
           res.body = { 'status': 200, 'success': true, 'result': clientAccount }
@@ -504,7 +503,6 @@ const models = {
               return next(null, req, res, next)
             }
 
-            console.log(account)
             models.insertClientEthAccount(bnb_address, account, (err, clientAccount) => {
               if(err) {
                 console.log(err)
@@ -513,7 +511,6 @@ const models = {
                 return next(null, req, res, next)
               }
 
-              console.log(clientAccount)
               res.status(205)
               res.body = { 'status': 200, 'success': true, 'result': clientAccount }
               return next(null, req, res, next)
@@ -626,8 +623,6 @@ const models = {
               return next(null, req, res, next)
             }
 
-            console.log(data)
-
             const ethTransactions = data[0]
             const swaps = data[1]
 
@@ -649,8 +644,6 @@ const models = {
               }
             })
 
-            console.log(newTransactions)
-
             if(newTransactions.length === 0) {
               res.status(400)
               res.body = { 'status': 400, 'success': false, 'result': 'Unable to find any new deposits' }
@@ -665,7 +658,6 @@ const models = {
                 return next(null, req, res, next)
               }
 
-              console.log(newSwaps)
               res.status(205)
               res.body = { 'status': 200, 'success': true, 'result': newSwaps }
               return next(null, req, res, next)
@@ -728,7 +720,6 @@ const models = {
           return callback(err)
         }
 
-        console.log(result)
         callback(null, result)
       }
     )
@@ -882,7 +873,6 @@ const models = {
               return next(null, req, res, next)
             }
 
-            console.log(tokenInfo)
             models.getKey(tokenInfo.bnb_address, (err, key) => {
               if(err || !key) {
                 console.log(err)
@@ -899,7 +889,6 @@ const models = {
                   return next(null, req, res, next)
                 }
 
-                console.log(transactionHash)
                 models.updateListProposal(proposalInfo.uuid, transactionHash, (err, updateResponse) => {
                   if(err) {
                     console.log(err)
@@ -1394,7 +1383,6 @@ const models = {
         }
 
         eth.getERC20Balance(eth_address, tokenInfo.erc20_address, (err, balance) => {
-          console.log("THE BALANCE: ", balance)
           if(err) {
             console.log(err)
             res.status(500)

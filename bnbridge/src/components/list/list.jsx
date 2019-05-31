@@ -150,7 +150,6 @@ class List extends Component {
   };
 
   listProposalUpdated = (data)  => {
-    console.log(data)
     this.setState({
       listProposal: data,
       page: 'SubmitList0'

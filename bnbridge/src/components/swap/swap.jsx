@@ -145,7 +145,6 @@ class Swap extends Component {
   };
 
   tokenSwapFinalized = (transactions) => {
-    console.log(transactions)
     this.setState({
       page: 2,
       loading: false,
