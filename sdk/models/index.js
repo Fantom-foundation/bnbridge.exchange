@@ -726,7 +726,7 @@ const models = {
   },
 
   insertSwap(transaction, clientAccount, tokenUuid, callback) {
-    db.oneOrNone('insert into swaps (uuid, token_uuid, eth_address, bnb_address, amount, client_account_uuid, deposit_transaction_hash, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, $6, now()) returning uuid, eth_address, amount, deposit_transaction_hash;', [tokenUuid, clientAccount.eth_address, clientAccount.bnb_address, transaction.amount, clientAccount.uuid, transaction.transactionHash])
+    db.oneOrNone('insert into swaps (uuid, token_uuid, eth_address, bnb_address, amount, client_account_uuid, deposit_transaction_hash, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, $6, now()) returning uuid, eth_address, amount, deposit_transaction_hash;', [tokenUuid, transaction.from, clientAccount.bnb_address, transaction.amount, clientAccount.uuid, transaction.transactionHash])
     .then((response) => {
       callback(null, response)
     })
