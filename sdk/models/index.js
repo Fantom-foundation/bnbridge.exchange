@@ -403,9 +403,11 @@ const models = {
   getKey(address, callback) {
     db.oneOrNone('select key_name, seed_phrase as mnemonic, password, encr_key from bnb_accounts where address = $1;', [address])
     .then((key) => {
-      const dbPassword = key.encr_key
-      const password = KEY+':'+dbPassword
-      key.password_decrypted = models.decrypt(key.password, password)
+      if(key.encr_key) {
+        const dbPassword = key.encr_key
+        const password = KEY+':'+dbPassword
+        key.password_decrypted = models.decrypt(key.password, password)
+      }
       callback(null, key)
     })
     .catch(callback)
@@ -689,15 +691,101 @@ const models = {
                 return next(null, req, res, next)
               }
 
-              res.status(205)
-              res.body = { 'status': 200, 'success': true, 'result': newSwaps }
-              return next(null, req, res, next)
+              /* Live processing */
+              console.log(newSwaps)
+              models.proccessSwaps(newSwaps, tokenInfo, (err, result) => {
+                if(err) {
+                  console.log(err)
+                  res.status(500)
+                  res.body = { 'status': 500, 'success': false, 'result': err }
+                  return next(null, req, res, next)
+                }
+
+                res.status(205)
+                res.body = { 'status': 200, 'success': true, 'result': newSwaps }
+                return next(null, req, res, next)
+              })
+              /* Live processing */
+
+              /* SCRIPT PROCESSING
+                res.status(205)
+                res.body = { 'status': 200, 'success': true, 'result': newSwaps }
+                return next(null, req, res, next)
+              */
             })
           })
         })
       })
     })
   },
+
+  proccessSwaps(swaps, tokenInfo, callback) {
+
+    models.getKey(tokenInfo.bnb_address, (err, key) => {
+      if(err || !key) {
+        console.log(err)
+        res.status(500)
+        res.body = { 'status': 500, 'success': false, 'result': 'Unable to retrieve key' }
+        return next(null, req, res, next)
+      }
+
+      async.map(swaps, (swap, callbackInner) => {
+        models.processSwap(swap, tokenInfo, key, callbackInner)
+      }, (err, swapResults) => {
+        if(err) {
+          return callback(err)
+        }
+
+        callback(err, swapResults)
+      })
+    })
+  },
+
+  processSwap(swap, tokenInfo, key, callback) {
+    bnb.transfer(key.mnemonic, swap.bnb_address, swap.amount, tokenInfo.unique_symbol, 'BNBridge Swap', (err, swapResult) => {
+      if(err) {
+        console.log(err)
+
+        return models.revertUpdateWithDepositTransactionHash(swap.uuid, (err) => {
+          if(err) {
+            console.log(err)
+          }
+
+          return callback(err)
+        })
+
+      }
+
+      if(swapResult && swapResult.result && swapResult.result.length > 0) {
+        let resultHash = swapResult.result[0].hash
+
+        console.log(resultHash)
+        models.updateWithTransferTransactionHash(swap.uuid, resultHash, (err) => {
+          if(err) {
+            return callback(err)
+          }
+
+          callback(null, resultHash)
+        })
+      } else {
+        console.log(swapResult)
+        return callback('Swap result is not defined')
+      }
+    })
+  },
+
+  revertUpdateWithDepositTransactionHash(uuid, callback) {
+    db.none('update swaps set deposit_transaction_hash = null where uuid = $1 and transfer_transaction_hash is null;', [uuid])
+    .then(callback)
+    .catch(callback)
+  },
+
+  updateWithTransferTransactionHash(uuid, hash,  callback) {
+    db.none('update swaps set transfer_transaction_hash = $2 where uuid = $1;', [uuid, hash])
+    .then(callback)
+    .catch(callback)
+  },
+
 
   validateFinalizeSwap(body) {
     const {
@@ -725,7 +813,7 @@ const models = {
   },
 
   getTokenInfoForSwap(tokenUuid, callback) {
-    db.oneOrNone('select tok.uuid, tok.name, tok.symbol, tok.unique_symbol, tok.total_supply, tok.fee_per_swap, tok.minimum_swap_amount, tok.erc20_address from tokens tok where tok.uuid = $1;', [tokenUuid])
+    db.oneOrNone('select tok.uuid, tok.name, tok.symbol, tok.unique_symbol, tok.total_supply, tok.fee_per_swap, tok.minimum_swap_amount, tok.erc20_address, bnb.address as bnb_address from tokens tok left join bnb_accounts bnb on bnb.uuid = tok.bnb_account_uuid where tok.uuid = $1;', [tokenUuid])
     .then((response) => {
       callback(null, response)
     })
@@ -757,7 +845,7 @@ const models = {
   },
 
   insertSwap(transaction, clientAccount, tokenUuid, callback) {
-    db.oneOrNone('insert into swaps (uuid, token_uuid, eth_address, bnb_address, amount, client_account_uuid, deposit_transaction_hash, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, $6, now()) returning uuid, eth_address, amount, deposit_transaction_hash;', [tokenUuid, transaction.from, clientAccount.bnb_address, transaction.amount, clientAccount.uuid, transaction.transactionHash])
+    db.oneOrNone('insert into swaps (uuid, token_uuid, eth_address, bnb_address, amount, client_account_uuid, deposit_transaction_hash, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, $6, now()) returning uuid, eth_address, bnb_address, amount, deposit_transaction_hash;', [tokenUuid, transaction.from, clientAccount.bnb_address, transaction.amount, clientAccount.uuid, transaction.transactionHash])
     .then((response) => {
       callback(null, response)
     })

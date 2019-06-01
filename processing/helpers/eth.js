@@ -62,9 +62,7 @@ const eth = {
 
     myContract.methods.balanceOf(address).call({ from: address })
     .then((balance) => {
-      console.log(balance);
       const theBalance = web3.utils.fromWei(balance.toString(), 'ether')
-
       callback(null, theBalance)
     })
   }

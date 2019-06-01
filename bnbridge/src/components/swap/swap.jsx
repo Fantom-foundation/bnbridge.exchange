@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
-import moment from 'moment';
 import {
   Grid,
   Typography,
@@ -415,9 +414,6 @@ class Swap extends Component {
           <Typography className={ classes.instructionBold }>
             Swap request pending
           </Typography>
-          { selectedToken.process_date && <Typography className={ classes.instructions }>
-            The swaps will be processed from <b>{moment(selectedToken.process_date).format('hha ZZ')}</b> on <b>{moment(selectedToken.process_date).format('DD MMM YYYY')}</b>
-          </Typography>}
           <Typography className={ classes.instructions }>
             We have added the following transaction/s to our log for your address:
           </Typography>

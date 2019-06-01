@@ -30,6 +30,11 @@ const bnb = {
     ptyProcess.write('exit\r');
   },
 
+  getBalance(address, callback) {
+    const bnbClient = new BnbApiClient(config.api);
+    bnbClient.getBalance(address).then((balances) => { callback(null, balances ) });
+  },
+
   getFees(callback) {
     const url = `${config.api}api/v1/fees`;
 
@@ -179,7 +184,6 @@ const bnb = {
     const privateFrom = BnbApiClient.crypto.getPrivateKeyFromMnemonic(mnemonic);
     const publicFrom = BnbApiClient.crypto.getAddressFromPrivateKey(privateFrom, config.prefix);
 
-
     const sequenceURL = `${config.api}api/v1/account/${publicFrom}/sequence`;
 
     const bnbClient = new BnbApiClient(config.api);
@@ -189,6 +193,13 @@ const bnb = {
     httpClient.get(sequenceURL)
     .then((res) => {
       const sequence = res.data.sequence || 0
+
+      console.log(publicFrom)
+      console.log(JSON.stringify(toObj, null, 1))
+      console.log(message)
+      console.log(sequence)
+
+
       return bnbClient.multiSend(publicFrom, toObj, message, sequence)
     })
     .then((result) => {
@@ -200,6 +211,7 @@ const bnb = {
       }
     })
     .catch((error) => {
+      console.log(error)
       callback(error)
     });
   },

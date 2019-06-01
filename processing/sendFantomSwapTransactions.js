@@ -11,7 +11,7 @@ const db = require('./helpers/db.js').db
 const config = require('./config')
 const bnb = require('./helpers/bnb.js')
 
-const FANTOM_UUID = "81c68eea-5650-a48a-b550-f090f3ea9fcf"
+const FANTOM_UUID = "133f21df-9a2c-0a65-b532-d5df78b92c26"
 
 getToken()
 
@@ -54,25 +54,44 @@ function callTransfer(token, swaps) {
 
     let swapUuids = []
 
-    const toObj = swaps.map((swap) => {
-      swapUuids.push(swap.uuid)
+    let sum = 0
 
-      return {
-        to: swap.bnb_address,
-        coins: [
-          {
-            denom: token.unique_symbol,
-            amount: token.fee_per_swap ? (parseFloat(swap.amount) - parseFloat(token.fee_per_swap))+"" : swap.amount
-          }
-        ]
+    const toObj = swaps.reduce((accumulator, currentValue) => {
+
+      swapUuids.push(currentValue.uuid)
+      sum = parseFloat(sum) + (parseFloat(currentValue.amount) * 1.01)
+
+      const thisSwap = accumulator.filter((swap) => {
+        return swap.to === currentValue.bnb_address
+      })
+
+      const amount = (parseFloat(currentValue.amount) * 1.01).toFixed(8)
+
+      if(thisSwap.length > 0) {
+        thisSwap[0].coins[0].amount = (parseFloat(thisSwap[0].coins[0].amount) + parseFloat(amount)).toFixed(8)
+
+        return accumulator
+      } else {
+        accumulator.push({
+          to: currentValue.bnb_address,
+          coins: [
+            {
+              denom: token.unique_symbol,
+              amount: amount
+            }
+          ]
+        })
+        return accumulator
       }
-    })
+    }, [])
 
-    console.log(toObj)
+    console.log(JSON.stringify(toObj, null, 2))
+
+    console.log("TOTAL SENDING: ", sum)
 
     bnb.multiSend(key.seed_phrase, toObj, 'BNBridge Swap', (err, sendResult) => {
       if(err) {
-        return error('Nothing to process swap:', err)
+        return error('Swap failed!:', err)
       }
 
       console.log(sendResult)
@@ -93,7 +112,7 @@ function updateSuccess(swapUuids, transactionHash) {
   const swapString = "'" + swapUuids.join("', '") + "'"
   console.log(swapString)
 
-  db.none("update swaps set transfer_transaction_hash = $1 where uuid in ("+swapString+");", [transactionHash])
+  db.none("update swaps set transfer_transaction_hash = $1, processed = true where uuid in ("+swapString+");", [transactionHash])
   .then(() => {
     console.log("DONE")
   })

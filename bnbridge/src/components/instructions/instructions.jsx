@@ -33,6 +33,13 @@ const styles = theme => ({
     display: 'inline-block',
     marginTop: "0.5rem"
   },
+  actionRed: {
+    fontSize: '1rem',
+    color: colors.lightBlack,
+    display: 'inline-block',
+    marginTop: "0.5rem",
+    fontWeight: 'bold'
+  },
   price: {
     paddingRight: '60px',
     fontSize: '1rem',
@@ -95,7 +102,8 @@ class Instructions extends Component {
 
   render() {
     const {
-      classes
+      classes,
+      selectedToken
     } = this.props;
 
     return (
