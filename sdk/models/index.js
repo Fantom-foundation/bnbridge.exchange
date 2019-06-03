@@ -1535,6 +1535,18 @@ const models = {
 
     return true
   },
+
+  /**
+    createAccountBNB()
+    creates a new BNB accoutn for the user.
+  */
+  createAccountBNB(req, res, next) {
+    const account = bnb.createAccountWithMneomnic()
+
+    res.status(205)
+    res.body = { 'status': 200, 'success': true, 'result': account }
+    return next(null, req, res, next)
+  }
 }
 
 String.prototype.hexEncode = function(){

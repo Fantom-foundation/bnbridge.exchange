@@ -26,6 +26,8 @@ import {
   BNB_BALANCES_UPDATED,
   GET_ETH_BALANCES,
   ETH_BALANCES_UPDATED,
+  CREATE_BNB_ACCOUNT,
+  BNB_ACCOUNT_CREATED,
 } from '../constants'
 const crypto = require('crypto');
 const bip39 = require('bip39');
@@ -117,6 +119,8 @@ class Store {
           case GET_ETH_BALANCES:
             this.getETHBalances(payload);
             break;
+          case CREATE_BNB_ACCOUNT:
+            this.createAccountBNB(payload);
           default: {
           }
         }
@@ -331,6 +335,19 @@ class Store {
       }
 
       emitter.emit(ETH_BALANCES_UPDATED, data.result);
+    });
+  };
+
+  createAccountBNB(payload) {
+    const url = "/api/v1/createAccountBNB"
+    this.callApi(url, 'POST', payload.content, payload, (err, data) => {
+      if(err) {
+        console.log(err)
+        emitter.emit(ERROR, err);
+        return
+      }
+
+      emitter.emit(BNB_ACCOUNT_CREATED, data.result);
     });
   };
 

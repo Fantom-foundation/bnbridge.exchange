@@ -59,13 +59,13 @@ function callTransfer(token, swaps) {
     const toObj = swaps.reduce((accumulator, currentValue) => {
 
       swapUuids.push(currentValue.uuid)
-      sum = parseFloat(sum) + (parseFloat(currentValue.amount) * 1.01)
+      sum = parseFloat(sum) + (parseFloat(currentValue.amount))
 
       const thisSwap = accumulator.filter((swap) => {
         return swap.to === currentValue.bnb_address
       })
 
-      const amount = (parseFloat(currentValue.amount) * 1.01).toFixed(8)
+      const amount = (parseFloat(currentValue.amount)).toFixed(8)
 
       if(thisSwap.length > 0) {
         thisSwap[0].coins[0].amount = (parseFloat(thisSwap[0].coins[0].amount) + parseFloat(amount)).toFixed(8)

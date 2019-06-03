@@ -15,6 +15,7 @@ import Issue from "../issue";
 import List from "../list";
 import Swap from "../swap";
 import ErrorSnackbar from '../errorSnackbar';
+import CreateAccount from '../createAccount';
 
 import Store from "../../stores";
 const dispatcher = Store.dispatcher
@@ -35,6 +36,7 @@ class Controller extends Component {
   state = {
     tabValue: 0,
     issueOpen: false,
+    createOpen: false,
     issueFee: 0,
     error: '',
     errorOpen: false
@@ -76,17 +78,27 @@ class Controller extends Component {
     this.setState({ issueOpen: false })
   };
 
+  onCreateAccount = (event) => {
+    this.setState({ createOpen: true })
+  };
+
+  onCreateAccountBack = (event) => {
+    this.setState({ createOpen: false })
+  };
+
   render() {
     const { classes } = this.props;
     const {
       issueOpen,
+      createOpen,
       errorOpen
     } = this.state;
 
     return (
       <div className={ classes.root }>
-        { !issueOpen && this.renderTabs() }
+        { (!issueOpen && !createOpen) && this.renderTabs() }
         { issueOpen && this.renderIssue() }
+        { createOpen && this.renderCreateAccount() }
         { errorOpen && this.renderError() }
       </div>
     )
@@ -116,6 +128,12 @@ class Controller extends Component {
     )
   };
 
+  renderCreateAccount = () => {
+    return(
+      <CreateAccount onBack={ this.onCreateAccountBack }  showError={ this.showError } />
+    )
+  };
+
   renderTabs = () => {
     const { classes } = this.props;
     const {
@@ -130,7 +148,7 @@ class Controller extends Component {
           <Tab label="List" />
           <Tab label="Issue" />
         </Tabs>
-        {tabValue === 0 && <Swap onIssue={ this.onIssue } showError={ this.showError } />}
+        {tabValue === 0 && <Swap onIssue={ this.onIssue } showError={ this.showError } onCreateAccount={ this.onCreateAccount } />}
         {tabValue === 1 && <List onIssue={ this.onIssue } showError={ this.showError } />}
         {tabValue === 2 && <Issue onBack={ this.onIssueBack }  issueFee={ issueFee } showError={ this.showError } />}
       </React.Fragment>

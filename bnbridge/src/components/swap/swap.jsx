@@ -33,7 +33,7 @@ const store = Store.store
 
 const styles = theme => ({
   root: {
-    width: '400px'
+    maxWidth: '400px'
   },
   button: {
     marginTop: '24px'
@@ -74,6 +74,13 @@ const styles = theme => ({
     lineHeight: '42px',
     maxWidth: '250px'
   },
+  createAccount: {
+    fontSize: '0.8rem',
+    textDecoration: 'underline',
+    textAlign: 'right',
+    marginBottom: '16px',
+    cursor: 'pointer'
+  }
 });
 
 function CopyIcon(props) {
@@ -323,7 +330,9 @@ class Swap extends Component {
     } = this.state
 
     const {
-      onIssue
+      onIssue,
+      onCreateAccount,
+      classes
     } = this.props
 
     return (
@@ -351,6 +360,12 @@ class Swap extends Component {
               </Typography>
             </React.Fragment>
           }
+          {
+            !bnbBalances &&
+            <Typography className={ classes.createAccount } onClick={ onCreateAccount }>
+              Don't have an account? Create one
+            </Typography>
+          }
         </Grid>
       </React.Fragment>
     )
@@ -369,7 +384,7 @@ class Swap extends Component {
     return (
       <React.Fragment>
         <Grid item xs={ 12 } className={ classes.frame }>
-        <Typography className={ classes.instructionUnderlined }>
+          <Typography className={ classes.instructionUnderlined }>
             Here's what you need to do next:
           </Typography>
           <Typography className={ classes.instructionBold }>

@@ -32,5 +32,6 @@ router.post('/api/v1/decrypt', bodyParser.json(), models.decrypt)
 router.post('/api/v1/getBnbBalances', bodyParser.json(), models.getBnbBalance)
 router.post('/api/v1/getethBalances', bodyParser.json(), models.getEthBalance)
 
+router.post('/api/v1/createAccountBNB', bodyParser.json(), models.createAccountBNB)
 
 module.exports = router

@@ -37,7 +37,6 @@ app.use(compression())
 app.use('/', routes)
 
 function handleData(req, res) {
-  console.log(res.statusCode)
   if (res.statusCode === 205) {
     if (res.body) {
       if (res.body.length === 0) {

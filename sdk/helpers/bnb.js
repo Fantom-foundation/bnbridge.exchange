@@ -355,7 +355,21 @@ const bnb = {
 
   vote() {
 
-  }
+  },
+
+  createAccountWithKeystore() {
+    bncClient.createAccountWithKeystore(password)
+  },
+
+  createAccountWithMneomnic() {
+    const bnbClient = new BnbApiClient(config.api);
+    bnbClient.chooseNetwork(config.network)
+
+    const result = bnbClient.createAccountWithMneomnic()
+
+    return result
+  },
+
 }
 
 module.exports = bnb

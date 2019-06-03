@@ -9,7 +9,7 @@ import StyledLabel from './label.jsx';
 
 const styles = theme => ({
   root: {
-    verticalAlign: 'bottom',
+    verticalAlign: 'middle',
     minWidth: '200px',
     display: 'inline-block',
     marginTop: '12px',
@@ -32,16 +32,15 @@ function StyledCheckbox(props) {
 
   return (
     <FormControl className={classes.root} variant="outlined" fullWidth={fullWidth} error={error}>
-      <StyledLabel label={ label } />
       <Checkbox
         id={ id }
         helpertext={ helpertext }
-        fullWidth={ fullWidth }
         checked={ value }
         onChange={ onChange }
         value={ id }
         disabled={ disabled }
       />
+      <StyledLabel label={ label } />
     </FormControl>
   )
 }

@@ -20,7 +20,7 @@ const store = Store.store
 
 const styles = theme => ({
   root: {
-    width: '400px'
+    maxWidth: '400px'
   },
   container: {
     display: 'flex',
