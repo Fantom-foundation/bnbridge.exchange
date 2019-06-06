@@ -151,8 +151,7 @@ const models = {
       name,
       symbol,
       total_supply,
-      erc20_address,
-      mintable
+      erc20_address
     } = body
     if(!name) {
       return 'name is required'
@@ -165,9 +164,6 @@ const models = {
     }
     if(!erc20_address) {
       return 'erc20_address is required'
-    }
-    if(!mintable) {
-      return 'mintable is required'
     }
 
     return true
