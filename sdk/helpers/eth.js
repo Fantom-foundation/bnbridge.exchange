@@ -67,6 +67,48 @@ const eth = {
 
       callback(null, theBalance)
     })
+    .catch(callback)
+  },
+
+  getERC20Symbol(contractAddress, callback) {
+    let myContract = new web3.eth.Contract(config.erc20ABI, contractAddress)
+
+    myContract.methods.symbol().call({ from: contractAddress })
+    .then((symbol) => {
+      console.log(symbol);
+
+      callback(null, symbol)
+    })
+    .catch(callback)
+  },
+
+  getERC20Name(contractAddress, callback) {
+    let myContract = new web3.eth.Contract(config.erc20ABI, contractAddress)
+
+    myContract.methods.name().call({ from: contractAddress })
+    .then((name) => {
+      console.log(name);
+
+      callback(null, name)
+    })
+    .catch(callback)
+  },
+
+  getERC20TotalSupply(contractAddress, callback) {
+    let myContract = new web3.eth.Contract(config.erc20ABI, contractAddress)
+
+    myContract.methods.totalSupply().call({ from: contractAddress })
+    .then((supply) => {
+      if(!supply) {
+        return callback(null, null)
+      }
+
+      console.log(supply);
+      const theSupply = web3.utils.fromWei(supply.toString(), 'ether')
+
+      callback(null, theSupply)
+    })
+    .catch(callback)
   }
 }
 

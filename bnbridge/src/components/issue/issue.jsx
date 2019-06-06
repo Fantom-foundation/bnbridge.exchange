@@ -9,6 +9,7 @@ import {
 import Checkbox from "../common/checkbox";
 import Input from "../common/input";
 import Button from "../common/button";
+import PageLoader from "../common/pageLoader";
 
 import { colors } from '../../theme'
 
@@ -17,7 +18,9 @@ import {
   ISSUE_TOKEN,
   TOKEN_ISSUED,
   FINALIZE_TOKEN,
-  TOKEN_FINALIZED
+  TOKEN_FINALIZED,
+  GET_ERC20_INFO,
+  ERC20_INFO_UPDATED
 } from '../../constants'
 
 import Store from "../../stores";
@@ -79,6 +82,7 @@ const styles = theme => ({
 class Issue extends Component {
   state = {
     page: 0,
+    loading: false,
 
     erc20address: '',
     erc20addressError: false,
@@ -90,34 +94,65 @@ class Issue extends Component {
     totalSupplyError: false,
     mintable: false,
     mintableError: false,
+    erc20Info: null
   };
 
   componentWillMount() {
     emitter.on(TOKEN_ISSUED, this.tokenIssued);
     emitter.on(TOKEN_FINALIZED, this.tokenFinalized);
+    emitter.on(ERC20_INFO_UPDATED, this.erc20InfoUpdated);
     emitter.on(ERROR, this.error);
   };
 
   componentWillUnmount() {
     emitter.removeListener(TOKEN_ISSUED, this.tokenIssued);
     emitter.removeListener(TOKEN_FINALIZED, this.tokenFinalized);
+    emitter.removeListener(ERC20_INFO_UPDATED, this.erc20InfoUpdated);
     emitter.on(ERROR, this.error);
   };
 
   error = (err) => {
     this.props.showError(err)
+
+    this.setState({ loading: false })
   }
 
   tokenIssued = (data) => {
     this.setState({
       page: 1,
+      loading: false,
       issueUuid: data.uuid,
       bnbDepositAddress: data.bnb_address
    })
   };
 
   tokenFinalized = (data) => {
-    this.setState({ page: 2 })
+    this.setState({
+      page: 2,
+      loading: false
+    })
+  };
+
+  erc20InfoUpdated = (data) => {
+    this.setState({
+      erc20Info: data,
+      loading: false,
+      tokenName: data.name,
+      totalSupply: data.total_supply,
+      symbol: data.symbol
+    })
+  };
+
+  callGetTokenInfo = (erc20address) => {
+    if(erc20address && erc20address.length === 42) {
+      const content = {
+        contract_address: erc20address,
+      }
+
+      dispatcher.dispatch({type: GET_ERC20_INFO, content })
+
+      this.setState({ loading: true })
+    }
   };
 
   callIssueToken = () => {
@@ -139,6 +174,8 @@ class Issue extends Component {
     }
 
     dispatcher.dispatch({type: ISSUE_TOKEN, content })
+
+    this.setState({ loading: true })
   };
 
   callFinalizeToken = () => {
@@ -150,6 +187,8 @@ class Issue extends Component {
       uuid: issueUuid
     }
     dispatcher.dispatch({type: FINALIZE_TOKEN, content })
+
+    this.setState({ loading: true })
   };
 
   validateIssueToken = () => {
@@ -215,6 +254,10 @@ class Issue extends Component {
     let val = []
     val[event.target.id] = event.target.value
     this.setState(val)
+
+    if(event.target.id === 'erc20address') {
+      this.callGetTokenInfo(event.target.value)
+    }
   };
 
   onSelectChange = (event) => {
@@ -234,7 +277,8 @@ class Issue extends Component {
       totalSupply,
       totalSupplyError,
       mintable,
-      mintableError
+      mintableError,
+      loading
     } = this.state
 
     return (
@@ -248,6 +292,7 @@ class Issue extends Component {
             value={ erc20address }
             error={ erc20addressError }
             onChange={ this.onChange }
+            disabled={ loading }
           />
         </Grid>
         <Grid item xs={ 12 }>
@@ -259,6 +304,7 @@ class Issue extends Component {
             value={ tokenName }
             error={ tokenNameError }
             onChange={ this.onChange }
+            disabled={ loading }
           />
         </Grid>
         <Grid item xs={ 12 }>
@@ -270,6 +316,7 @@ class Issue extends Component {
             value={ symbol }
             error={ symbolError }
             onChange={ this.onChange }
+            disabled={ loading }
           />
         </Grid>
         <Grid item xs={ 12 }>
@@ -281,6 +328,7 @@ class Issue extends Component {
             value={ totalSupply }
             error={ totalSupplyError }
             onChange={ this.onChange }
+            disabled={ loading }
           />
         </Grid>
         <Grid item xs={ 12 }>
@@ -291,6 +339,7 @@ class Issue extends Component {
             value={ mintable }
             error={ mintableError }
             onChange={ this.onSelectChange }
+            disabled={ loading }
           />
         </Grid>
       </React.Fragment>
@@ -342,7 +391,7 @@ class Issue extends Component {
             Awesome
           </Typography>
           <Typography className={ classes.instructions }>
-            Your transaction was successfull.
+            Your transaction was successfull. You should find it in the token list.
           </Typography>
         </Grid>
       </React.Fragment>
@@ -356,23 +405,27 @@ class Issue extends Component {
     } = this.props
 
     const {
-      page
+      page,
+      loading
     } = this.state
 
     return (
       <Grid container className={ classes.root }>
+        { loading && <PageLoader /> }
         { page === 0 && this.renderPage0() }
         { page === 1 && this.renderPage1() }
         { page === 2 && this.renderPage2() }
         { page > 0 &&
         <Grid item xs={ 6 } className={ classes.button }>
           <Button
+            disabled={ loading }
             label="Back"
             onClick={ page === 0 ? onBack : this.onBack }
           />
         </Grid>}
         <Grid item xs={ page > 0 ? 6 : 12 } align="right" className={ classes.button }>
           <Button
+            disabled={ loading }
             fullWidth={true}
             label="Next"
             onClick={ this.onNext }

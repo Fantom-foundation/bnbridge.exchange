@@ -28,6 +28,8 @@ import {
   ETH_BALANCES_UPDATED,
   CREATE_BNB_ACCOUNT,
   BNB_ACCOUNT_CREATED,
+  GET_ERC20_INFO,
+  ERC20_INFO_UPDATED
 } from '../constants'
 const crypto = require('crypto');
 const bip39 = require('bip39');
@@ -121,6 +123,10 @@ class Store {
             break;
           case CREATE_BNB_ACCOUNT:
             this.createAccountBNB(payload);
+            break;
+          case GET_ERC20_INFO:
+            this.getERC20Info(payload);
+            break;
           default: {
           }
         }
@@ -350,6 +356,19 @@ class Store {
       emitter.emit(BNB_ACCOUNT_CREATED, data.result);
     });
   };
+
+  getERC20Info(payload) {
+    const url = "/api/v1/getERC20Info"
+    this.callApi(url, 'POST', payload.content, payload, (err, data) => {
+      if(err) {
+        console.log(err)
+        emitter.emit(ERROR, err);
+        return
+      }
+
+      emitter.emit(ERC20_INFO_UPDATED, data.result);
+    });
+  }
 
   callApi = function (url, method, postData, payload, callback) {
     var call = apiUrl + url;

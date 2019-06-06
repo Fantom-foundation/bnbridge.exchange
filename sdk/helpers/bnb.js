@@ -115,7 +115,7 @@ const bnb = {
       }
     });
 
-    const mintableString = mintable ? ' --mintable' : ''
+    const mintableString = mintable === true ? ' --mintable' : ''
 
     ptyProcess.write('cd '+config.filePath+'\r');
     ptyProcess.write('./'+config.fileName+' token issue --token-name "'+tokenName+'" --total-supply '+totalSupply+' --symbol '+symbol+''+mintableString+' --from '+keyName+' --chain-id='+config.chainID+' --node='+config.nodeData+' --trust-node\r');
@@ -221,9 +221,20 @@ const bnb = {
         ptyProcess.write('exit\r');
       } else if(data.includes('TxHash')) {
         try {
-          const responseJson = JSON.parse(data.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, ''))
+          //
+          // console.log("/******************/")
+          // console.log(data)
+          // console.log(data.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, ''))
+          // console.log("/******************/")
+          //
+          // const responseJson = JSON.parse(data.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, ''))
 
-          callback(null, responseJson.TxHash)
+          let removedJunk = data.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+
+          const index = removedJunk.indexOf('"TxHash":')
+          const hash = removedJunk.substring(index+10, index+74).trim()
+
+          callback(null, hash)
           ptyProcess.write('exit\r');
         } catch(err) {
           callback(err)

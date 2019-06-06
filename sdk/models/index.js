@@ -76,10 +76,10 @@ const models = {
     }
   },
 
-  decrypt(req, res, next) {
+  decryptCall(req, res, next) {
     models.descryptPayload(req, res, next, (data) => {
       res.status(200)
-      res.body = { 'status': 400, 'success': false, 'result': data }
+      res.body = { 'status': 200, 'success': true, 'result': data }
       return next(null, req, res, next)
     })
   },
@@ -105,7 +105,7 @@ const models = {
         if(err || !response) {
           console.log(err)
           res.status(500)
-          res.body = { 'status': 500, 'success': false, 'result': 'Unable to insert token' }
+          res.body = { 'status': 500, 'success': false, 'result': err }
           return next(null, req, res, next)
         } else {
           const uuid = response.uuid
@@ -182,10 +182,10 @@ const models = {
       mintable
     } = body
 
-    total_supply = total_supply/10000000000 // divide by 18 decimals of erc20 multiply by 8 deceimals of binance
+    total_supply = total_supply*100000000 // multiply by 8 deceimals of binance
     total_supply = total_supply.toFixed(0)
 
-    db.oneOrNone('insert into tokens (uuid, name, symbol, total_supply, erc20_address, mintable, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, $6, $7, now()) returning uuid', [name, symbol, total_supply, erc20_address, mintable])
+    db.oneOrNone('insert into tokens (uuid, name, symbol, total_supply, erc20_address, mintable, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, now()) returning uuid', [name, symbol, total_supply, erc20_address, mintable])
     .then((response) => {
       callback(null, response)
     })
@@ -406,6 +406,8 @@ const models = {
       if(key.encr_key) {
         const dbPassword = key.encr_key
         const password = KEY+':'+dbPassword
+        console.log(password)
+        console.log(key.password)
         key.password_decrypted = models.decrypt(key.password, password)
       }
       callback(null, key)
@@ -1546,6 +1548,50 @@ const models = {
     res.status(205)
     res.body = { 'status': 200, 'success': true, 'result': account }
     return next(null, req, res, next)
+  },
+
+  getERC20Info(req, res, next) {
+    models.descryptPayload(req, res, next, (data) => {
+      const {
+        contract_address
+      } = data
+
+      eth.getERC20Name(contract_address, (err, name) => {
+        if(err) {
+          console.log(err)
+          res.status(500)
+          res.body = { 'status': 500, 'success': false, 'result': err }
+          return next(null, req, res, next)
+        }
+        eth.getERC20Symbol(contract_address, (err, symbol) => {
+          if(err) {
+            console.log(err)
+            res.status(500)
+            res.body = { 'status': 500, 'success': false, 'result': err }
+            return next(null, req, res, next)
+          }
+          eth.getERC20TotalSupply(contract_address, (err, totalSupply) => {
+            if(err) {
+              console.log(err)
+              res.status(500)
+              res.body = { 'status': 500, 'success': false, 'result': err }
+              return next(null, req, res, next)
+            }
+
+            const returnObj = {
+              name: name,
+              symbol: symbol,
+              total_supply: totalSupply,
+              address: contract_address
+            }
+
+            res.status(205)
+            res.body = { 'status': 200, 'success': true, 'result': returnObj }
+            return next(null, req, res, next)
+          })
+        })
+      })
+    })
   }
 }
 

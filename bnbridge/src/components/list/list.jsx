@@ -9,6 +9,7 @@ import {
 import Input from "../common/input";
 import Button from "../common/button";
 import AssetSelection from "../assetSelection";
+import PageLoader from "../common/pageLoader";
 
 import { colors } from '../../theme'
 
@@ -85,6 +86,7 @@ const styles = theme => ({
 class List extends Component {
   state = {
     page: 'SubmitProposal0',
+    loading: false,
 
     listProposal: {},
 
@@ -151,6 +153,7 @@ class List extends Component {
 
   listProposalUpdated = (data)  => {
     this.setState({
+      loading: false,
       listProposal: data,
       page: 'SubmitList0'
     })
@@ -158,10 +161,12 @@ class List extends Component {
 
   error = (err) => {
     this.props.showError(err)
+    this.setState({ loading: false })
   }
 
   tokenListed = (data) => {
     this.setState({
+      loading: false,
       page: 'Listed',
       listUuid: data.uuid,
       bnbDepositAddress: data.bnb_address
@@ -170,6 +175,7 @@ class List extends Component {
 
   listProposalSubmitted = (data) => {
     this.setState({
+      loading: false,
       page: 'SubmitProposal1',
       proposalUuid: data.uuid,
       bnbDepositAddress: data.bnb_address
@@ -177,7 +183,10 @@ class List extends Component {
   };
 
   listProposalFinalized = (data) => {
-    this.setState({ page: 'SubmitProposal2' })
+    this.setState({
+      loading: false,
+      page: 'SubmitProposal2'
+    })
   };
 
   callSubmitListProposal = () => {
@@ -197,6 +206,7 @@ class List extends Component {
     }
 
     dispatcher.dispatch({type: SUBMIT_LIST_PROPOSAL, content })
+    this.setState({ loading: true })
   };
 
   callFinalizeListProposal = () => {
@@ -209,6 +219,7 @@ class List extends Component {
     }
 
     dispatcher.dispatch({type: FINALIZE_LIST_PROPOSAL, content })
+    this.setState({ loading: true })
   };
 
   callList = () => {
@@ -221,6 +232,7 @@ class List extends Component {
     }
 
     dispatcher.dispatch({type: LIST_TOKEN, content })
+    this.setState({ loading: true })
   };
 
   validateListProposal = () => {
@@ -291,6 +303,7 @@ class List extends Component {
       votingPeriodError: false,
       initialPrice: '',
       initialPriceError: false,
+      loading: false,
     })
   };
 
@@ -537,11 +550,13 @@ class List extends Component {
     } = this.props
 
     const {
-      page
+      page,
+      loading
     } = this.state
 
     return (
       <Grid container className={ classes.root }>
+        { loading && <PageLoader /> }
         { (page === 'SubmitProposal0' || page === 'GettingList' || page === 'SubmitList0') && this.renderAssetSelection() }
         { page === 'SubmitProposal0' && this.renderSubmitProposal0() }
         { page === 'SubmitProposal1' && this.renderSubmitProposal1() }
@@ -552,6 +567,7 @@ class List extends Component {
         { !(['SubmitProposal0', 'GettingList', 'SubmitList0'].includes(page)) &&
           <Grid item xs={ 6 } align='left' className={ classes.button }>
             <Button
+              disabled={ loading }
               label="Back"
               onClick={ this.onBack }
             />
@@ -561,6 +577,7 @@ class List extends Component {
           !(['GettingList', 'SubmitList0', 'Listed' ].includes(page)) &&
           <Grid item xs={ !(page === 'SubmitProposal0' || page === 'SubmitList0') ? 6 : 12 } align="right" className={ classes.button }>
             <Button
+              disabled={ loading }
               fullWidth={true}
               label="Next"
               onClick={ this.onNext }
