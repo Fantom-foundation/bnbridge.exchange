@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
 import config from "../config";
+import FileSaver from 'file-saver';
 import {
   ERROR,
   GET_TOKENS,
@@ -29,7 +30,9 @@ import {
   CREATE_BNB_ACCOUNT,
   BNB_ACCOUNT_CREATED,
   GET_ERC20_INFO,
-  ERC20_INFO_UPDATED
+  ERC20_INFO_UPDATED,
+  DOWNLOAD_BNB_KEYSTORE,
+  BNB_KEYSTORE_DOWNLOADED
 } from '../constants'
 const crypto = require('crypto');
 const bip39 = require('bip39');
@@ -123,6 +126,9 @@ class Store {
             break;
           case CREATE_BNB_ACCOUNT:
             this.createAccountBNB(payload);
+            break;
+          case DOWNLOAD_BNB_KEYSTORE:
+            this.downloadKeystoreBNB(payload);
             break;
           case GET_ERC20_INFO:
             this.getERC20Info(payload);
@@ -357,6 +363,19 @@ class Store {
     });
   };
 
+  downloadKeystoreBNB(payload) {
+    const url = "/api/v1/downloadKeystoreBNB"
+    this.downloadFile(url, payload.content, (err, data) => {
+      if(err) {
+        console.log(err)
+        emitter.emit(ERROR, err);
+        return
+      }
+
+      emitter.emit(BNB_KEYSTORE_DOWNLOADED, data.result);
+    });
+  };
+
   getERC20Info(payload) {
     const url = "/api/v1/getERC20Info"
     this.callApi(url, 'POST', payload.content, payload, (err, data) => {
@@ -371,7 +390,7 @@ class Store {
   }
 
   callApi = function (url, method, postData, payload, callback) {
-    var call = apiUrl + url;
+    const call = apiUrl + url;
 
     if (method === 'GET') {
       postData = null;
@@ -411,6 +430,37 @@ class Store {
         callback(error, null)
       });
   };
+
+  downloadFile = function (url, postData, callback) {
+    const call = apiUrl + url;
+
+    postData = encrypt(postData, url);
+
+    fetch(call, {
+      method: "POST",
+      body: postData,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Basic ' + config.apiToken,
+      }
+    })
+    .then((response) => response.blob())
+    .then(function(blob) {
+
+      const fr = new FileReader();
+
+      fr.onload = function() {
+          console.log(JSON.parse(this.result))
+          const response = JSON.parse(this.result)
+    
+          FileSaver.saveAs(blob, response.id+'_keystore.json');
+
+          callback(null, response)
+      };
+
+      fr.readAsText(blob);
+    })
+  }
 }
 
 var store = new Store();

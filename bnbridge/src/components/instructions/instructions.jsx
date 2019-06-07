@@ -102,8 +102,7 @@ class Instructions extends Component {
 
   render() {
     const {
-      classes,
-      selectedToken
+      classes
     } = this.props;
 
     return (

@@ -372,14 +372,20 @@ const bnb = {
     bncClient.createAccountWithKeystore(password)
   },
 
-  createAccountWithMneomnic() {
+  createAccountWithMneomnic(password) {
     const bnbClient = new BnbApiClient(config.api);
     bnbClient.chooseNetwork(config.network)
 
-    const result = bnbClient.createAccountWithMneomnic()
+    let result = bnbClient.createAccountWithMneomnic()
 
     return result
   },
+
+  generateKeyStore(privateKey, password) {
+    const result = BnbApiClient.crypto.generateKeyStore(privateKey, password);
+
+    return result
+  }
 
 }
 

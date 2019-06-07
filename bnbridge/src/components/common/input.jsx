@@ -4,9 +4,15 @@ import { withStyles } from '@material-ui/core/styles';
 import {
   FormControl,
   OutlinedInput,
-  FormHelperText
+  FormHelperText,
+  InputAdornment,
+  IconButton
 } from '@material-ui/core';
 import StyledLabel from './label.jsx';
+
+
+import Visibility from '@material-ui/icons/Visibility';
+import VisibilityOff from '@material-ui/icons/VisibilityOff';
 
 const styles = theme => ({
   root: {
@@ -30,8 +36,30 @@ function StyledInput(props) {
     value,
     onChange,
     error,
-    disabled
+    disabled,
+    password
   } = props;
+
+
+  const [values, setValues] = React.useState({
+    amount: '',
+    password: '',
+    weight: '',
+    weightRange: '',
+    showPassword: false,
+  });
+
+  const handleClickShowPassword = () => {
+    setValues({ ...values, showPassword: !values.showPassword });
+  };
+
+  const endAdornment = password ? (
+    <InputAdornment position="end">
+      <IconButton aria-label="Toggle password visibility" onClick={handleClickShowPassword}>
+        {values.showPassword ? <Visibility /> : <VisibilityOff />}
+      </IconButton>
+    </InputAdornment>) :  null
+
 
   return (
     <FormControl className={classes.root} variant="outlined" fullWidth={fullWidth} error={error}>
@@ -45,6 +73,9 @@ function StyledInput(props) {
         value={ value }
         onChange={ onChange }
         disabled={ disabled }
+        type={ password ? values.showPassword ? 'text' : 'password' : "text" }
+        password={ password }
+        endAdornment={ endAdornment }
       />
     { helpertext && <FormHelperText>{helpertext}</FormHelperText> }
     </FormControl>
@@ -62,6 +93,7 @@ StyledInput.propTypes = {
   disabled: PropTypes.bool,
   value: PropTypes.string,
   onChange: PropTypes.func,
+  password: PropTypes.bool
 };
 
 export default withStyles(styles)(StyledInput);

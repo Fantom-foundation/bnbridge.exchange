@@ -416,10 +416,6 @@ class Swap extends Component {
   renderPage2 = () => {
 
     const {
-      selectedToken
-    } = this.state
-
-    const {
       classes
     } = this.props
 

@@ -1546,6 +1546,57 @@ const models = {
     return next(null, req, res, next)
   },
 
+  downloadKeystoreBNB(req, res, next) {
+    models.descryptPayload(req, res, next, (data) => {
+      let result = models.validateDownloadKeystoreBNB(data)
+
+      if(result !== true) {
+        res.status(400)
+        res.body = { 'status': 400, 'success': false, 'result': result }
+        return next(null, req, res, next)
+      }
+
+      const {
+        private_key,
+        password
+      } = data
+
+      const account = bnb.generateKeyStore(private_key, password)
+
+      models.returnDownload(req, res, account)
+    })
+  },
+
+  validateDownloadKeystoreBNB(body) {
+    let {
+      password,
+      private_key
+    } = body
+
+    if(!private_key) {
+      return 'private_key is required'
+    }
+
+    if(!password) {
+      return 'password is required'
+    }
+
+    return true
+  },
+
+  returnDownload(req, res, keyStore) {
+
+    console.log("returning: ", keyStore)
+
+    var data = JSON.stringify(keyStore);
+    res.setHeader('Content-disposition', 'attachment; filename= '+keyStore.id+'_keystore.json');
+    res.setHeader('Content-type', 'application/json');
+    // res.write(data, function (err) {
+    //     res.end();
+    // })
+    res.send( data )
+  },
+
   getERC20Info(req, res, next) {
     models.descryptPayload(req, res, next, (data) => {
       const {
@@ -1588,7 +1639,8 @@ const models = {
         })
       })
     })
-  }
+  },
+
 }
 
 String.prototype.hexEncode = function(){
