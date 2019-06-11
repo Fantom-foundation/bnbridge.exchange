@@ -1,5 +1,5 @@
 const Web3 = require('web3');
-const config = require('./config')
+const config = require('../config')
 
 var web3 = new Web3(new Web3.providers.HttpProvider(config.provider));
 
@@ -13,6 +13,6 @@ createAccount((err, account) => {
     console.log(err)
   }
   console.log(account.address)
-  console.log(account.privateKey)  
+  console.log(account.privateKey)
 
 })
