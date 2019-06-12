@@ -1,5 +1,6 @@
 const Web3 = require('web3');
 const config = require('../config')
+const Tx = require('ethereumjs-tx').Transaction;
 
 var web3 = new Web3(new Web3.providers.HttpProvider(config.provider));
 
@@ -65,6 +66,60 @@ const eth = {
       const theBalance = web3.utils.fromWei(balance.toString(), 'ether')
       callback(null, theBalance)
     })
+  },
+
+  sendTransaction(contractAddress, myPrivateKey, from, to, amount, callback) {
+    // let myContract = new web3.eth.Contract(config.erc20ABI, contractAddress)
+    //
+    // // amount = amount * 1000000000000000000
+    //
+    // console.log("SENDING: " + amount + "FTM - " + from + " -> " + to)
+    // myContract.methods.transfer(to, amount).send({ from: from })
+    // .then((hash) => {
+    //   console.log(hash)
+    //   callback(null, hash)
+    // })
+    // .catch(callback)
+
+    var count = web3.eth.getTransactionCount(from);
+    let myContract = new web3.eth.Contract(config.erc20ABI, contractAddress)
+
+    var data = myContract.methods.transfer(to, amount).encodeABI();
+    var gasPrice = web3.eth.gasPrice;
+    var gasLimit = 90000;
+
+    var rawTx = {
+      "from": from,
+      "nonce": web3.utils.toHex(count),
+      "gasPrice": web3.utils.toHex(gasPrice),
+      "gasLimit": web3.utils.toHex(gasLimit),
+      "to": to,
+      "value": "0x00",
+      "data": data,
+      "chainId": 3,
+      "v": (3 * 2) + 35
+    };
+
+
+    var privKey = new Buffer(myPrivateKey, 'hex');
+    var tx = new Tx(rawTx);
+    tx.sign(privKey);
+    var serializedTx = tx.serialize();
+
+    web3.eth.sendSignedTransaction('0x' + serializedTx.toString('hex'), function(err, hash) {
+      if (!err)
+        console.log(hash);
+      else
+        console.log(err);
+
+      callback(err, hash)
+    });
+  },
+
+  addAccount(account) {
+    const ret = web3.eth.accounts.wallet.add(account)
+
+    return ret
   }
 }
 

@@ -2,6 +2,7 @@ const db = require('../helpers/db.js').db;
 const config = require('../config');
 const bnb = require('../helpers/bnb.js');
 const eth = require('../helpers/eth.js');
+const emailer = require('../helpers/emailer.js');
 const async = require('async');
 const generator = require('generate-password');
 const crypto = require('crypto');
@@ -402,9 +403,8 @@ const models = {
       if(key.encr_key) {
         const dbPassword = key.encr_key
         const password = KEY+':'+dbPassword
-        console.log(password)
-        console.log(key.password)
         key.password_decrypted = models.decrypt(key.password, password)
+        key.mnemonic = models.decrypt(key.mnemonic, password)
       }
       callback(null, key)
     })
@@ -690,7 +690,6 @@ const models = {
               }
 
               /* Live processing */
-              console.log(newSwaps)
               models.proccessSwaps(newSwaps, tokenInfo, (err, result) => {
                 if(err) {
                   console.log(err)
@@ -744,14 +743,26 @@ const models = {
       if(err) {
         console.log(err)
 
-        return models.revertUpdateWithDepositTransactionHash(swap.uuid, (err) => {
-          if(err) {
-            console.log(err)
+        return models.revertUpdateWithDepositTransactionHash(swap.uuid, (revertErr) => {
+          if(revertErr) {
+            console.log(revertErr)
           }
+
+          let text = "BNBridge encountered an error processing a swap."
+
+          text += '\n\n*********************************************************'
+          text += '\nToken: '+tokenInfo.name + ' ('+ tokenInfo.symbol +')'
+          text += '\nDeposit Hash: '+swap.deposit_transaction_hash
+          text += '\nFrom: '+swap.eth_address
+          text += '\nTo: '+swap.bnb_address
+          text += '\nAmount: '+swap.amount + ' ' + tokenInfo.symbol
+          text += '\n\nError Received: '+err
+          text += '\n*********************************************************'
+
+          emailer.sendMail('BNBridge error', text)
 
           return callback(err)
         })
-
       }
 
       if(swapResult && swapResult.result && swapResult.result.length > 0) {
