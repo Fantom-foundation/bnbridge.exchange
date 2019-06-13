@@ -69,11 +69,11 @@ const bnb = {
       if(true) { //run on linux - somehow we can get this
         buildResponse = buildResponse + data
 
-        if(data.includes("It is the only way to recover your account if you ever forget your password.")) {
+        if(data.split(' ').length == 24) {
 
-          console.log("HERE IS THE FULL BULD RESPONSE")
+          console.log('\r**************************************************************************************************************\r')
           console.log(buildResponse)
-          console.log('\r***************************************************\r')
+          console.log('\r**************************************************************************************************************\r')
 
           const tmpData = data.replace(/\s\s+/g, ' ').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '').split(' ');
           const address = tmpData[6]
