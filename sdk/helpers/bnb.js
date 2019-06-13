@@ -71,14 +71,25 @@ const bnb = {
 
         if(data.split(' ').length == 24) {
 
-          console.log('\r**************************************************************************************************************\r')
-          console.log(buildResponse)
-          console.log('\r**************************************************************************************************************\r')
 
-          const tmpData = data.replace(/\s\s+/g, ' ').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '').split(' ');
-          const address = tmpData[6]
-          const publicKey = tmpData[7]
-          const seedPhrase = tmpData.slice(33, 57).join(' ')
+          const tmpData = buildResponse.split('\n');
+
+          let publicKey = ''
+          let address = ''
+          let seedPhrase = ''
+
+          for(var i = 0; i < tmpData.length; i++) {
+            if(tmpData[i].indexOf("NAME:") >= 0 && tmpData[i].indexOf("TYPE:") >= 0 && tmpData[i].indexOf("ADDRESS:") >= 0 && tmpData[i].indexOf("PUBKEY:") >= 0) {
+
+              let arr = tmpData[i+1].split(' ').filter(Boolean)
+              address = arr[2]
+              publicKey = arr[3]
+            }
+
+            if(tmpData[i].split(" ").length == 24) {
+              seedPhrase = tmpData[i]
+            }
+          }
 
           ptyProcess.write('exit\r');
 
