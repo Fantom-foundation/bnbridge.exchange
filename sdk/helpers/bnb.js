@@ -51,7 +51,7 @@ const bnb = {
   createKey(name, password, callback) {
     const ptyProcess = bnb.spawnProcess()
 
-    const buildResponse = ""
+    let buildResponse = ""
 
     ptyProcess.on('data', function(data) {
       process.stdout.write(data);
