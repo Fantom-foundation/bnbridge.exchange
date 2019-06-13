@@ -82,6 +82,7 @@ const bnb = {
             if(tmpData[i].indexOf("NAME:") >= 0 && tmpData[i].indexOf("TYPE:") >= 0 && tmpData[i].indexOf("ADDRESS:") >= 0 && tmpData[i].indexOf("PUBKEY:") >= 0) {
 
               let arr = tmpData[i+1].split(' ').filter(Boolean)
+              console.log(arr)
               address = arr[2]
               publicKey = arr[3]
             }
