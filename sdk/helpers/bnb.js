@@ -52,7 +52,9 @@ const bnb = {
     const ptyProcess = bnb.spawnProcess()
 
     ptyProcess.on('data', function(data) {
+      console.log('Received a new response from the CLI tool')
       process.stdout.write(data);
+      console.log('***************************************************')
 
       if(data.includes("Enter a passphrase")) {
         // process.stdout.write('Setting password to '+password);
