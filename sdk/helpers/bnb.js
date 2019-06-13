@@ -51,10 +51,10 @@ const bnb = {
   createKey(name, password, callback) {
     const ptyProcess = bnb.spawnProcess()
 
+    const buildResponse = ""
+
     ptyProcess.on('data', function(data) {
-      console.log('Received a new response from the CLI tool')
       process.stdout.write(data);
-      console.log('***************************************************')
 
       if(data.includes("Enter a passphrase")) {
         // process.stdout.write('Setting password to '+password);
@@ -66,20 +66,45 @@ const bnb = {
         ptyProcess.write(password+'\r');
       }
 
-      if(data.includes("**Important**")) {
-        // process.stdout.write(data);
-        const tmpData = data.replace(/\s\s+/g, ' ').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '').split(' ');
-        const address = tmpData[6]
-        const publicKey = tmpData[7]
-        const seedPhrase = tmpData.slice(33, 57).join(' ')
+      if(true) { //run on linux - somehow we can get this
+        buildResponse = buildResponse + data
 
-        ptyProcess.write('exit\r');
-        callback(null, {
-          address,
-          publicKey,
-          seedPhrase
-        })
+        if(data.includes("It is the only way to recover your account if you ever forget your password.") {
+
+          console.log("HERE IS THE FULL BULD RESPONSE")
+          console.log(buildResponse)
+          console.log('\r***************************************************\r')
+
+          const tmpData = data.replace(/\s\s+/g, ' ').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '').split(' ');
+          const address = tmpData[6]
+          const publicKey = tmpData[7]
+          const seedPhrase = tmpData.slice(33, 57).join(' ')
+
+          ptyProcess.write('exit\r');
+
+          callback(null, {
+            address,
+            publicKey,
+            seedPhrase
+          })
+        }
+      } else {
+        if(data.includes("**Important**")) {
+          // process.stdout.write(data);
+          const tmpData = data.replace(/\s\s+/g, ' ').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '').split(' ');
+          const address = tmpData[6]
+          const publicKey = tmpData[7]
+          const seedPhrase = tmpData.slice(33, 57).join(' ')
+
+          ptyProcess.write('exit\r');
+          callback(null, {
+            address,
+            publicKey,
+            seedPhrase
+          })
+        }
       }
+
 
       if(data.includes("override the existing name")) {
         ptyProcess.write('n\r');
