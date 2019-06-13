@@ -81,14 +81,15 @@ const bnb = {
           for(var i = 0; i < tmpData.length; i++) {
             if(tmpData[i].indexOf("NAME:") >= 0 && tmpData[i].indexOf("TYPE:") >= 0 && tmpData[i].indexOf("ADDRESS:") >= 0 && tmpData[i].indexOf("PUBKEY:") >= 0) {
 
-              let arr = tmpData[i+1].split(' ').filter(Boolean)
+              let arr = tmpData[i+1].split('\t').filter(Boolean)
+              address = arr[2].replace('\r','')
+              publicKey = arr[3].replace('\r','')
               console.log(arr)
-              address = arr[2]
-              publicKey = arr[3]
+              
             }
 
             if(tmpData[i].split(" ").length == 24) {
-              seedPhrase = tmpData[i]
+              seedPhrase = tmpData[i].replace('\r','')
             }
           }
 
