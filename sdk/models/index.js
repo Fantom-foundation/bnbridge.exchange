@@ -664,6 +664,10 @@ const models = {
             }
 
             const newTransactions = ethTransactions.filter((ethTransaction) => {
+              if(!ethTransaction || ethTransaction.amount <= 0) {
+                return false
+              }
+
               const thisTransaction = swaps.filter((swap) => {
                 return swap.deposit_transaction_hash === ethTransaction.transactionHash
               })

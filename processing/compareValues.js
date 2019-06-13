@@ -12,8 +12,8 @@ const bnb = require('./helpers/bnb.js')
 const eth = require('./helpers/eth.js')
 const async = require('async')
 
-const FANTOM_UUID = "133f21df-9a2c-0a65-b532-d5df78b92c26"
-const FANTOM_ERC = "0x4e15361fd6b4bb609fa63c81a2be19d873717870"
+const FANTOM_UUID = ""
+const FANTOM_ERC = ""
 
 process()
 

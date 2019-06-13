@@ -12,7 +12,7 @@ const bnb = require('./helpers/bnb.js')
 const eth = require('./helpers/eth.js')
 const async = require('async')
 
-const FANTOM_UUID = "133f21df-9a2c-0a65-b532-d5df78b92c26"
+const FANTOM_UUID = ""
 
 getToken()
 
@@ -80,24 +80,24 @@ function getTransactionsForAddresses(token, clientAddresses, clients) {
 
       console.log(pendingSwaps)
 
-      async.map(pendingSwaps, (swap, callback) => {
-        insertSwap(swap, token, callback)
-      }, (err, data) => {
-        if(err) {
-          return error(err)
-        }
-
-        console.log("DONE")
-        console.log('Inserted these:', data)
-      })
+      // async.map(pendingSwaps, (swap, callback) => {
+      //   insertSwap(swap, token, callback)
+      // }, (err, data) => {
+      //   if(err) {
+      //     return error(err)
+      //   }
+      //
+      //   console.log("DONE")
+      //   console.log('Inserted these:', data)
+      // })
     })
   })
 }
 
-function insertSwap(transaction, token, callback) {
-  db.oneOrNone('insert into swaps (uuid, token_uuid, eth_address, bnb_address, amount, client_account_uuid, deposit_transaction_hash, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, $6, now()) returning uuid, eth_address, amount, deposit_transaction_hash;', [token.uuid, transaction.from, transaction.client.bnb_address, transaction.amount, transaction.client.uuid, transaction.transactionHash])
-  .then((response) => {
-    callback(null, response)
-  })
-  .catch(callback)
-}
+// function insertSwap(transaction, token, callback) {
+//   db.oneOrNone('insert into swaps (uuid, token_uuid, eth_address, bnb_address, amount, client_account_uuid, deposit_transaction_hash, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, $6, now()) returning uuid, eth_address, amount, deposit_transaction_hash;', [token.uuid, transaction.from, transaction.client.bnb_address, transaction.amount, transaction.client.uuid, transaction.transactionHash])
+//   .then((response) => {
+//     callback(null, response)
+//   })
+//   .catch(callback)
+// }

@@ -4,11 +4,11 @@ const bip39 = require('bip39');
 const algorithm = 'aes-256-ctr';
 
 
-const codePassword = 'witness canyon foot sing song tray task defense float bottom town obvious faint globe door tonight alpha battle purse jazz flag author choose whisper'
-const dbPassword = bip39.generateMnemonic()
-// const dbPassword = 'describe hammer make moment farm ability husband grain rubber claw vague tobacc'
+const codePassword = ''
+// const dbPassword = bip39.generateMnemonic()
+const dbPassword = ''
 
-const privateKey = '0x6964e9deea92093921c82e88b1ad716b0826f60b98c7507340227acaebce9122'
+const privateKey = ''
 
 const password = codePassword+':'+dbPassword
 

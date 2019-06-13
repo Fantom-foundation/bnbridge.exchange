@@ -9,12 +9,12 @@
   "author": "antonnell.crypto@gmail.com",
   "license": "MIT",
   "dependencies": {
-    "@binance-chain/javascript-sdk": "^2.10.0",
+    "@binance-chain/javascript-sdk": "^2.13.5",
     "async": "^3.0.1",
     "axios": "^0.18.1",
     "ethereumjs-tx": "^2.0.0",
     "node-pty": "^0.8.1",
     "pg-promise": "^8.6.5",
-    "web3": "^1.0.0-beta.53"
+    "web3": "1.0.0-beta.53"
   }
 }

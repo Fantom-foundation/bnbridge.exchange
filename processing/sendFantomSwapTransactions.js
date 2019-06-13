@@ -11,7 +11,7 @@ const db = require('./helpers/db.js').db
 const config = require('./config')
 const bnb = require('./helpers/bnb.js')
 
-const FANTOM_UUID = "133f21df-9a2c-0a65-b532-d5df78b92c26"
+const FANTOM_UUID = ""
 
 getToken()
 

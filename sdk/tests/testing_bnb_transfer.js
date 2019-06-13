@@ -2,15 +2,14 @@ const BnbApiClient = require('@binance-chain/javascript-sdk');
 const axios = require('axios');
 
 const MNEMONIC = '';
-const HTTP_API = 'https://testnet-dex.binance.org';
-const ASSET = 'BNB';
-const AMOUNT = 40;
+// const HTTP_API = 'https://testnet-dex.binance.org';
+const HTTP_API = 'https://dex.binance.org';
+const ASSET = '';
+const AMOUNT = 0;
 const ADDRESS_TO = '';
-const MESSAGE = 'Transfer';
-const NETWORK = 'testnet';
-const PREFIX = 'tbnb';
-
-// const PRIVATE_KEY = 'e9cd3a2a8c19f8ba594484e0aab212a364e804937a5c25b41451665d3b02c11e';
+const MESSAGE = 'MEMO';
+const NETWORK = 'mainnet';
+const PREFIX = 'bnb';
 
 const bnbClient = new BnbApiClient(HTTP_API);
 bnbClient.chooseNetwork(NETWORK)
@@ -22,8 +21,6 @@ const ADDRESS_FROM = BnbApiClient.crypto.getAddressFromPrivateKey(PRIVATE_KEY, P
 console.log(ADDRESS_FROM)
 const httpClient = axios.create({ baseURL: HTTP_API });
 const sequenceURL = `${HTTP_API}/api/v1/account/${ADDRESS_FROM}/sequence`;
-
-console.log(sequenceURL)
 
 bnbClient.setPrivateKey(PRIVATE_KEY);
 bnbClient.initChain();
