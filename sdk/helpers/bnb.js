@@ -85,7 +85,7 @@ const bnb = {
               address = arr[2].replace('\r','')
               publicKey = arr[3].replace('\r','')
               console.log(arr)
-              
+
             }
 
             if(tmpData[i].split(" ").length == 24) {
@@ -136,10 +136,10 @@ const bnb = {
     ptyProcess.on('data', function(data) {
       process.stdout.write(data);
 
-      if(data.includes("Committed")) {
+      if(data.includes("Issued ")) {
 
         let index = data.indexOf('Issued '+symbol)
-        let uniqueSymbol = data.substr(index+7, 7)
+        let uniqueSymbol = data.substr(index+7, (symbol.length+4))
 
         callback(null, { uniqueSymbol })
         ptyProcess.write('exit\r');
@@ -297,9 +297,9 @@ const bnb = {
         ptyProcess.write(password+"\r");
       }
 
-      if(data.includes("Committed")) {
+      if(data.includes("Issued ")) {
         let index = data.indexOf('Issued '+symbol)
-        let uniqueSymbol = data.substr(index+7, 7)
+        let uniqueSymbol = data.substr(index+7, (symbol.length+4))
 
         callback(null, data)
         ptyProcess.write('exit\r');
