@@ -66,7 +66,7 @@ const bnb = {
         ptyProcess.write(password+'\r');
       }
 
-      if(true) { //run on linux - somehow we can get this
+      if(os.platform() !== 'win32') {
         buildResponse = buildResponse + data
 
         if(data.split(' ').length == 24) {
