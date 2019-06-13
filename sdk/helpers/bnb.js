@@ -69,7 +69,7 @@ const bnb = {
       if(true) { //run on linux - somehow we can get this
         buildResponse = buildResponse + data
 
-        if(data.includes("It is the only way to recover your account if you ever forget your password.") {
+        if(data.includes("It is the only way to recover your account if you ever forget your password.")) {
 
           console.log("HERE IS THE FULL BULD RESPONSE")
           console.log(buildResponse)
