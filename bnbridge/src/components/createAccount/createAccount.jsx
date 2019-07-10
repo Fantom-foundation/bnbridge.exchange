@@ -189,7 +189,7 @@ class Swap extends Component {
       valid = false
     }
 
-    if(password != confirmPassword) {
+    if(password !== confirmPassword) {
       this.setState({ passwordError: true, confirmPasswordError: true })
       valid = false
     }
@@ -319,7 +319,6 @@ class Swap extends Component {
 
     const {
       accept,
-      acceptError
     } = this.state
 
     return (
@@ -398,8 +397,6 @@ class Swap extends Component {
     } = this.props
 
     const {
-      account,
-      mnemonicWords,
       enteredWords,
       wordError,
       loading,
@@ -576,8 +573,6 @@ class Swap extends Component {
     const {
       page,
       loading,
-      accept,
-      validateEnabled
     } = this.state
 
     return (
