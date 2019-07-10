@@ -89,18 +89,20 @@ const styles = theme => ({
     verticalAlign: 'middle',
     borderRadius: '25px',
     background: '#dedede',
-    marginRight: '24px',
     height: '50px',
     width: '50px',
     textAlign: 'center',
-    marginBottom: '12px'
+    cursor: 'pointer'
   },
   iconName: {
+    paddingLeft: '24px',
     display: 'inline-block',
     verticalAlign: 'middle'
   },
   swapDirection: {
-    margin: '20px 12px 10px 12px',
+    margin: '14px 12px 18px 12px'
+  },
+  gridClick: {
     cursor: 'pointer'
   }
 });
@@ -652,7 +654,7 @@ class Swap extends Component {
     return (
       <React.Fragment>
         <Label label={ 'Swap direction' } overrideStyle={ { marginTop: '12px' } } />
-        <Grid item xs={ 5 }>
+        <Grid item xs={ 5 } onClick={ this.onSwapDirectionClick } className={ classes.gridClick }>
           <div className={ classes.icon }>
             <img
               alt=""
@@ -664,10 +666,10 @@ class Swap extends Component {
             <Typography  variant='h5'>{ first ==='Binance' ? 'BEP2' : 'ERC20' }</Typography>
           </div>
         </Grid>
-        <Grid item xs={ 2 }>
-          <SwapIcon className={ classes.swapDirection } onClick={ this.onSwapDirectionClick } />
+        <Grid item xs={ 2 } onClick={ this.onSwapDirectionClick } className={ classes.gridClick }>
+          <SwapIcon className={ classes.swapDirection } />
         </Grid>
-        <Grid item xs={ 5 } align='left' >
+        <Grid item xs={ 5 } align='left' onClick={ this.onSwapDirectionClick } className={ classes.gridClick }>
           <div className={ classes.icon }>
             <img
               alt=""
