@@ -102,7 +102,7 @@ class AssetSelection extends Component {
           <Select
             id="token"
             fullWidth={ true }
-            label="Binance Chain Token"
+            label="Token"
             placeholder="Select Token"
             options={ tokenOptions }
             value={ token }

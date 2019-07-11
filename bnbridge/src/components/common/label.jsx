@@ -16,11 +16,12 @@ const styles = theme => ({
 function Label(props) {
   const {
     label,
-    classes
+    classes,
+    overrideStyle
   } = props;
 
   return (
-    <Typography variant="h6" gutterBottom className={ classes.inline }>
+    <Typography variant="h6" gutterBottom className={ classes.inline } style={ overrideStyle }>
       {label}
     </Typography>
   )
@@ -28,7 +29,8 @@ function Label(props) {
 
 Label.propTypes = {
   classes: PropTypes.object.isRequired,
-  label: PropTypes.string.isRequired
+  label: PropTypes.string.isRequired,
+  overrideStyle: PropTypes.object
 };
 
 export default withStyles(styles)(Label);

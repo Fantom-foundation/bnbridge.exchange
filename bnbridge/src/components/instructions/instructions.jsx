@@ -113,7 +113,7 @@ class Instructions extends Component {
         <Grid item xs={12} align='left'>
           <div style={{"margin-right":"50px"}} className={ classes.root } >
             <Typography className={ classes.header }>With bnbridge you can:</Typography>
-            <li><Typography className={ classes.action }>Swap ERC20 to BEP2 compatible tokens</Typography></li>
+            <li><Typography className={ classes.action }>Swap between ERC20 and BEP2 tokens</Typography></li>
             <li><Typography className={ classes.action }>Launch BEP2 assets</Typography></li>
             <li><Typography className={ classes.action }>List tokens on Binance DEX</Typography></li>
           </div>

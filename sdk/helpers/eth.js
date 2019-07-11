@@ -109,7 +109,48 @@ const eth = {
       callback(null, theSupply)
     })
     .catch(callback)
-  }
+  },
+
+  async sendTransaction(contractAddress, privateKey, from, to, amount, callback) {
+
+    let sendAmount = web3.utils.toWei(amount, 'ether')
+
+    const consumerContract = new web3.eth.Contract(config.erc20ABI, contractAddress);
+    const myData = consumerContract.methods.transfer(to, sendAmount).encodeABI();
+
+    const tx = {
+      from,
+      to: contractAddress,
+      value: '0',
+      gasPrice: web3.utils.toWei('6', 'gwei'),
+      gas: 150000,
+      chainId: 1,
+      nonce: await web3.eth.getTransactionCount(from,'pending'),
+      data: myData
+    }
+
+    const signed = await web3.eth.accounts.signTransaction(tx, privateKey)
+    const rawTx = signed.rawTransaction
+
+    const sendRawTx = rawTx =>
+      new Promise((resolve, reject) =>
+        web3.eth
+          .sendSignedTransaction(rawTx)
+          .on('transactionHash', resolve)
+          .on('error', reject)
+      )
+
+    const result = await sendRawTx(rawTx).catch((err) => {
+      return err
+    })
+
+    if(result.toString().includes('error')) {
+      callback(result, null)
+    } else {
+      callback(null, result.toString())
+    }
+
+  },
 }
 
 module.exports = eth
