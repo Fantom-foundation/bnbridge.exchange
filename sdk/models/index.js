@@ -684,15 +684,6 @@ const models = {
     const aes256seed = models.encrypt(keyData.seedPhrase, password)
     const aes256password = models.encrypt(keyPassword, password)
 
-    console.log('START Client Account Info START')
-    console.log(ethAddress)
-    console.log(keyName)
-    console.log(password)
-    console.log(keyData)
-    console.log(aes256seed)
-    console.log(aes256password)
-    console.log('END Client Account Info END')
-
     db.oneOrNone('insert into client_bnb_accounts(uuid, public_key, address, seed_phrase, key_name, password, encr_key, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, $3, $4, $5, $6, now()) returning uuid, address;', [keyData.publicKey, keyData.address, aes256seed, keyName, aes256password, dbPassword])
     .then((returnedBnbAccount) => {
       db.oneOrNone('insert into client_accounts_eth(uuid, eth_address, client_bnb_account_uuid, created) values (md5(random()::text || clock_timestamp()::text)::uuid, $1, $2, now()) returning uuid, eth_address;', [ethAddress, returnedBnbAccount.uuid])
@@ -717,8 +708,6 @@ const models = {
   */
   finalizeSwap(req, res, next) {
     models.descryptPayload(req, res, next, (data) => {
-
-      console.log(data)
 
       let result = models.validateFinalizeSwap(data)
 
@@ -928,8 +917,6 @@ const models = {
             return next(null, req, res, next)
           }
 
-          console.log(newTransactions)
-
           models.insertSwaps(newTransactions, clientAccount, token_uuid, direction, (err, newSwaps) => {
             if(err) {
               console.log(err)
@@ -1009,7 +996,6 @@ const models = {
       if(swapResult && swapResult.result && swapResult.result.length > 0) {
         let resultHash = swapResult.result[0].hash
 
-        console.log(resultHash)
         models.updateWithTransferTransactionHash(swap.uuid, resultHash, (err) => {
           if(err) {
             return callback(err)
@@ -1077,7 +1063,6 @@ const models = {
       if(swapResult) {
         let resultHash = swapResult
 
-        console.log(resultHash)
         models.updateWithTransferTransactionHash(swap.uuid, resultHash, (err) => {
           if(err) {
             return callback(err)
@@ -1948,8 +1933,6 @@ const models = {
   },
 
   returnDownload(req, res, keyStore) {
-
-    console.log("returning: ", keyStore)
 
     var data = JSON.stringify(keyStore);
     res.setHeader('Content-disposition', 'attachment; filename= '+keyStore.id+'_keystore.json');
