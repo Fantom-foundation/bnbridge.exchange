@@ -358,6 +358,12 @@ const bnb = {
           }
 
           console.log(tmpData)
+
+          if(tmpData.includes('root@')) {
+            let index = tmpData.indexOf(' root@')
+            tmpData = tmpData.substring(0, index).trim()
+          }
+
           const responseJson = JSON.parse(tmpData)
 
           callback(null, responseJson)
