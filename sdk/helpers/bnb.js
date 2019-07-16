@@ -344,7 +344,7 @@ const bnb = {
 
     ptyProcess.on('data', function(data) {
 
-      process.stdout.write(data);
+      // process.stdout.write(data);
 
       if(data.includes("ERROR:")) {
         callback(data)
@@ -362,6 +362,8 @@ const bnb = {
               callback(null, responseJson)
               ptyProcess.write('exit\r');
             } catch(err) {
+              console.log("THIS ERRORED")
+              console.log(buildResponse)
               //ignore for now, we need to build more
             }
           }
