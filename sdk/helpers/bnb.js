@@ -349,20 +349,26 @@ const bnb = {
         ptyProcess.write('exit\r');
       } else if(data.includes("gov/TextProposal")) {
         try {
+          console.log(tmpData)
 
-          let tmpData = data.replace(/\s\s+/g, ' ').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
+          let tmpData = data
 
-          if(tmpData.includes(' PS ')) {
-            let index = tmpData.indexOf(' PS ')
-            tmpData = tmpData.substring(0, index).trim()
+          if(os.platform() !== 'win32') {
+
+            tmpData = tmpData.replace(/\s\s+/g, ' ').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
+
+            if(tmpData.includes(' PS ')) {
+              let index = tmpData.indexOf(' PS ')
+              tmpData = tmpData.substring(0, index).trim()
+            }
+          } else {
+            if(tmpData.includes('root@')) {
+              let index = tmpData.indexOf(' root@')
+              tmpData = tmpData.substring(0, index).trim()
+            }
           }
 
           console.log(tmpData)
-
-          if(tmpData.includes('root@')) {
-            let index = tmpData.indexOf(' root@')
-            tmpData = tmpData.substring(0, index).trim()
-          }
 
           const responseJson = JSON.parse(tmpData)
 
