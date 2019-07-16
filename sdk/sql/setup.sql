@@ -115,7 +115,9 @@ CREATE TABLE "public"."tokens" (
   "mintable" bool,
   "minimum_swap_amount" varchar(32),
   "fee_per_swap" varchar(32),
-  "process_date" timestamp(6)
+  "process_date" timestamp(6),
+  "bnb_to_eth_enabled" boolean,
+  "eth_to_bnb_enabled" boolean,
 )
 WITH (OIDS=FALSE);
 

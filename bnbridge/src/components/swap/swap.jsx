@@ -299,11 +299,24 @@ class Swap extends Component {
 
   onSwapDirectionClick = () => {
     const {
-      swapDirection
+      swapDirection,
+      selectedToken
     } = this.state
 
+    let direction = swapDirection==='EthereumToBinance'?'BinanceToEthereum':'EthereumToBinance'
+
+    if(selectedToken){
+      if(!selectedToken.eth_to_bnb_enabled && direction === 'EthereumToBinance') {
+        direction = 'BinanceToEthereum'
+      }
+
+      if(!selectedToken.bnb_to_eth_enabled && direction === 'BinanceToEthereum') {
+        direction = 'EthereumToBinance'
+      }
+    }
+
     this.setState({
-      swapDirection: swapDirection==='EthereumToBinance'?'BinanceToEthereum':'EthereumToBinance',
+      swapDirection: direction,
       ethReceiveAddress: '',
       bnbReceiveAddress: '',
       ethBalances: null,
@@ -355,9 +368,31 @@ class Swap extends Component {
       return tok.uuid === value
     })
 
+    if(theToken.length < 1) {
+      this.setState({ token: value, selectedToken: null })
+      return false;
+    }
+
     this.setState({ token: value, selectedToken: theToken[0] })
 
-    if(swapDirection === 'EthereumToBinance') {
+    if(!theToken[0].eth_to_bnb_enabled && !theToken[0].bnb_to_eth_enabled) {
+      this.setState({ swapDirection: null })
+      return false
+    }
+
+    let direction = swapDirection
+
+    if(!theToken[0].eth_to_bnb_enabled && swapDirection === 'EthereumToBinance') {
+      direction = 'BinanceToEthereum'
+      this.setState({ swapDirection: direction })
+    }
+
+    if(!theToken[0].bnb_to_eth_enabled && swapDirection === 'BinanceToEthereum') {
+      direction = 'EthereumToBinance'
+      this.setState({ swapDirection: direction })
+    }
+
+    if(direction === 'EthereumToBinance') {
       if(theToken.length > 0  && bnbReceiveAddress && bnbReceiveAddress !== "" && bnbReceiveAddress.length === Config.bnbAddressLength) {
         const content = {
           bnb_address: bnbReceiveAddress,
@@ -467,6 +502,12 @@ class Swap extends Component {
         <AssetSelection onIssue={ onIssue } onTokenSelected={ this.onTokenSelected } disabled={ loading } />
         <Grid item xs={ 12 }>
           {
+
+
+            (selectedToken && !selectedToken.eth_to_bnb_enabled && !selectedToken.bnb_to_eth_enabled) ?
+              <React.Fragment>
+              </React.Fragment>
+            :
             swapDirection === "EthereumToBinance" ?
               <React.Fragment>
                 <Input
@@ -640,7 +681,8 @@ class Swap extends Component {
     } = this.props
 
     const {
-      swapDirection
+      swapDirection,
+      selectedToken
     } = this.state
 
     let first = 'Binance'
@@ -649,6 +691,16 @@ class Swap extends Component {
     if(swapDirection === 'EthereumToBinance') {
       first = 'Ethereum'
       second = 'Binance'
+    }
+
+    if(selectedToken && !selectedToken.eth_to_bnb_enabled && !selectedToken.bnb_to_eth_enabled) {
+
+      return (
+        <React.Fragment>
+          <Label label={ 'Swap direction' } overrideStyle={ { marginTop: '12px' } } />
+          <Typography>No available swaps for selectedToken.symbol</Typography>
+        </React.Fragment>
+      )
     }
 
     return (
@@ -693,6 +745,7 @@ class Swap extends Component {
     const {
       page,
       loading,
+      selectedToken
     } = this.state
 
     return (
@@ -705,7 +758,7 @@ class Swap extends Component {
           <Button
             fullWidth={true}
             label={ page === 2 ? "Done" : "Next" }
-            disabled={ loading }
+            disabled={ loading || (selectedToken && !selectedToken.eth_to_bnb_enabled && !selectedToken.bnb_to_eth_enabled) }
             onClick={ this.onNext }
           />
         </Grid>
