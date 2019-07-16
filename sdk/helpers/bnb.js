@@ -349,9 +349,9 @@ const bnb = {
         ptyProcess.write('exit\r');
       } else if(data.includes("gov/TextProposal")) {
         try {
-          console.log(tmpData)
 
           let tmpData = data
+          console.log(tmpData)
 
           if(os.platform() !== 'win32') {
 
