@@ -363,8 +363,8 @@ const bnb = {
               callback(null, responseJson)
               ptyProcess.write('exit\r');
             } catch(err) {
-              console.log("THIS ERRORED")
-              console.log(buildResponse)
+              // console.log("THIS ERRORED")
+              // console.log(buildResponse)
               //ignore for now, we need to build more
             }
           }
@@ -378,7 +378,7 @@ const bnb = {
                 tmpData = tmpData.substring(0, index).trim()
               }
 
-              console.log(tmpData)
+              // console.log(tmpData)
               const responseJson = JSON.parse(tmpData)
 
               callback(null, responseJson)
