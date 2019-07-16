@@ -342,7 +342,7 @@ const bnb = {
 
     ptyProcess.on('data', function(data) {
 
-      // process.stdout.write(data);
+      process.stdout.write(data);
 
       if(data.includes("ERROR:")) {
         callback(data)
@@ -350,27 +350,31 @@ const bnb = {
       } else if(data.includes("gov/TextProposal")) {
         try {
 
-          let tmpData = data
-          console.log(tmpData)
+          // let tmpData = data
+          // console.log(tmpData)
+          //
+          // if(os.platform() !== 'win32') {
+          //
+          //   tmpData = tmpData.replace(/\s\s+/g, ' ').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
+          //
+          //   if(tmpData.includes(' PS ')) {
+          //     let index = tmpData.indexOf(' PS ')
+          //     tmpData = tmpData.substring(0, index).trim()
+          //   }
+          // } else {
+          //   if(tmpData.includes('root@')) {
+          //     let index = tmpData.indexOf(' root@')
+          //     tmpData = tmpData.substring(0, index).trim()
+          //   }
+          // }
+          //
+          // console.log(tmpData)
+          //
+          // const responseJson = JSON.parse(tmpData)
 
-          if(os.platform() !== 'win32') {
-
-            tmpData = tmpData.replace(/\s\s+/g, ' ').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
-
-            if(tmpData.includes(' PS ')) {
-              let index = tmpData.indexOf(' PS ')
-              tmpData = tmpData.substring(0, index).trim()
-            }
-          } else {
-            if(tmpData.includes('root@')) {
-              let index = tmpData.indexOf(' root@')
-              tmpData = tmpData.substring(0, index).trim()
-            }
+          let responseJson = {
+            notOK: "OK"
           }
-
-          console.log(tmpData)
-
-          const responseJson = JSON.parse(tmpData)
 
           callback(null, responseJson)
           ptyProcess.write('exit\r');
