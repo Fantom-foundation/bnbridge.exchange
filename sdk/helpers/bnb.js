@@ -340,6 +340,8 @@ const bnb = {
   getListProposal(proposalId, callback) {
     const ptyProcess = bnb.spawnProcess()
 
+    let buildResponse = ""
+
     ptyProcess.on('data', function(data) {
 
       process.stdout.write(data);
@@ -347,40 +349,42 @@ const bnb = {
       if(data.includes("ERROR:")) {
         callback(data)
         ptyProcess.write('exit\r');
-      } else if(data.includes("gov/TextProposal")) {
-        try {
+      } else {
 
-          // let tmpData = data
-          // console.log(tmpData)
-          //
-          // if(os.platform() !== 'win32') {
-          //
-          //   tmpData = tmpData.replace(/\s\s+/g, ' ').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
-          //
-          //   if(tmpData.includes(' PS ')) {
-          //     let index = tmpData.indexOf(' PS ')
-          //     tmpData = tmpData.substring(0, index).trim()
-          //   }
-          // } else {
-          //   if(tmpData.includes('root@')) {
-          //     let index = tmpData.indexOf(' root@')
-          //     tmpData = tmpData.substring(0, index).trim()
-          //   }
-          // }
-          //
-          // console.log(tmpData)
-          //
-          // const responseJson = JSON.parse(tmpData)
+        if(os.platform() !== 'win32') {
 
-          let responseJson = {
-            notOK: "OK"
+          if(!data.includes("root@")) {
+            buildResponse = buildResponse + data
+
+            try {
+              const responseJson = JSON.parse(tmpData)
+
+              callback(null, responseJson)
+              ptyProcess.write('exit\r');
+            } catch(err) {
+              //ignore for now, we need to build more
+            }
           }
+        } else {
+          if(data.includes("gov/TextProposal")) {
+            try {
+              let tmpData = data.replace(/\s\s+/g, ' ').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
 
-          callback(null, responseJson)
-          ptyProcess.write('exit\r');
-        } catch(err) {
-          callback(err)
-          ptyProcess.write('exit\r');
+              if(tmpData.includes(' PS ')) {
+                let index = tmpData.indexOf(' PS ')
+                tmpData = tmpData.substring(0, index).trim()
+              }
+
+              console.log(tmpData)
+              const responseJson = JSON.parse(tmpData)
+
+              callback(null, responseJson)
+              ptyProcess.write('exit\r');
+            } catch(err) {
+              callback(err)
+              ptyProcess.write('exit\r');
+            }
+          }
         }
       }
     });
