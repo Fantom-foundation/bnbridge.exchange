@@ -353,7 +353,7 @@ const bnb = {
 
         if(os.platform() !== 'win32') {
 
-          if(!data.includes("root@")) {
+          if(!data.includes("root@") && !data.includes("./bnbcli") && !data.includes("/0.5.8.1/linux/")) {
             buildResponse = buildResponse + data
 
             try {
