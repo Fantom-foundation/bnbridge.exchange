@@ -357,6 +357,7 @@ const bnb = {
             buildResponse = buildResponse + data
 
             try {
+              tmpData = buildResponse.replace(/\s\s+/g, ' ')
               const responseJson = JSON.parse(tmpData)
 
               callback(null, responseJson)
