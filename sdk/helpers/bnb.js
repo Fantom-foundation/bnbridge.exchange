@@ -340,6 +340,8 @@ const bnb = {
   getListProposal(proposalId, callback) {
     const ptyProcess = bnb.spawnProcess()
 
+    let buildResponse = ""
+
     ptyProcess.on('data', function(data) {
 
       // process.stdout.write(data);
@@ -347,24 +349,45 @@ const bnb = {
       if(data.includes("ERROR:")) {
         callback(data)
         ptyProcess.write('exit\r');
-      } else if(data.includes("gov/TextProposal")) {
-        try {
+      } else {
 
-          let tmpData = data.replace(/\s\s+/g, ' ').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
+        if(os.platform() !== 'win32') {
 
-          if(tmpData.includes(' PS ')) {
-            let index = tmpData.indexOf(' PS ')
-            tmpData = tmpData.substring(0, index).trim()
+          if(!data.includes("root@") && !data.includes("./bnbcli") && !data.includes("/0.5.8.1/linux/")) {
+            buildResponse = buildResponse + data
+
+            try {
+              tmpData = buildResponse.replace(/\s\s+/g, ' ')
+              const responseJson = JSON.parse(tmpData)
+
+              callback(null, responseJson)
+              ptyProcess.write('exit\r');
+            } catch(err) {
+              // console.log("THIS ERRORED")
+              // console.log(buildResponse)
+              //ignore for now, we need to build more
+            }
           }
+        } else {
+          if(data.includes("gov/TextProposal")) {
+            try {
+              let tmpData = data.replace(/\s\s+/g, ' ').replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
 
-          console.log(tmpData)
-          const responseJson = JSON.parse(tmpData)
+              if(tmpData.includes(' PS ')) {
+                let index = tmpData.indexOf(' PS ')
+                tmpData = tmpData.substring(0, index).trim()
+              }
 
-          callback(null, responseJson)
-          ptyProcess.write('exit\r');
-        } catch(err) {
-          callback(err)
-          ptyProcess.write('exit\r');
+              // console.log(tmpData)
+              const responseJson = JSON.parse(tmpData)
+
+              callback(null, responseJson)
+              ptyProcess.write('exit\r');
+            } catch(err) {
+              callback(err)
+              ptyProcess.write('exit\r');
+            }
+          }
         }
       }
     });

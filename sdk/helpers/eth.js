@@ -122,8 +122,8 @@ const eth = {
       from,
       to: contractAddress,
       value: '0',
-      gasPrice: web3.utils.toWei('6', 'gwei'),
-      gas: 150000,
+      gasPrice: web3.utils.toWei('25', 'gwei'),
+      gas: 60000,
       chainId: 1,
       nonce: await web3.eth.getTransactionCount(from,'pending'),
       data: myData
