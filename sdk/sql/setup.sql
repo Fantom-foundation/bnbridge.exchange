@@ -20,7 +20,7 @@ CREATE TABLE "public"."client_accounts_bnb" (
 )
 WITH (OIDS=FALSE);
 
-DROP TABLE "public"."client_accounts_eth";
+DROP TABLE IF EXISTS "public"."client_accounts_eth";
 CREATE TABLE "public"."client_accounts_eth" (
   "uuid" char(36) NOT NULL,
   "eth_address" varchar(64),
@@ -29,7 +29,7 @@ CREATE TABLE "public"."client_accounts_eth" (
 )
 WITH (OIDS=FALSE);
 
-DROP TABLE "public"."client_bnb_accounts";
+DROP TABLE IF EXISTS "public"."client_bnb_accounts";
 CREATE TABLE "public"."client_bnb_accounts" (
   "uuid" char(36) NOT NULL,
   "public_key" varchar(128),
@@ -42,7 +42,7 @@ CREATE TABLE "public"."client_bnb_accounts" (
 )
 WITH (OIDS=FALSE);
 
-DROP TABLE "public"."client_eth_accounts";
+DROP TABLE IF EXISTS "public"."client_eth_accounts";
 CREATE TABLE "public"."client_eth_accounts" (
   "uuid" char(36) NOT NULL,
   "private_key" text,
@@ -52,7 +52,7 @@ CREATE TABLE "public"."client_eth_accounts" (
 )
 WITH (OIDS=FALSE);
 
-DROP TABLE "public"."eth_accounts";
+DROP TABLE IF EXISTS "public"."eth_accounts";
 CREATE TABLE "public"."eth_accounts" (
   "uuid" char(36) NOT NULL,
   "private_key" text,
@@ -62,7 +62,7 @@ CREATE TABLE "public"."eth_accounts" (
 )
 WITH (OIDS=FALSE);
 
-DROP TABLE "public"."list_proposals";
+DROP TABLE IF EXISTS "public"."list_proposals";
 CREATE TABLE "public"."list_proposals" (
   "uuid" char(36) NOT NULL,
   "token_uuid" char(36),
@@ -81,7 +81,7 @@ CREATE TABLE "public"."list_proposals" (
 )
 WITH (OIDS=FALSE);
 
-DROP TABLE "public"."swaps";
+DROP TABLE IF EXISTS "public"."swaps";
 CREATE TABLE "public"."swaps" (
   "uuid" char(36) NOT NULL,
   "token_uuid" char(36),
@@ -97,7 +97,7 @@ CREATE TABLE "public"."swaps" (
 )
 WITH (OIDS=FALSE);
 
-DROP TABLE "public"."tokens";
+DROP TABLE IF EXISTS "public"."tokens";
 CREATE TABLE "public"."tokens" (
   "uuid" char(36) NOT NULL,
   "name" varchar(64),
@@ -117,7 +117,7 @@ CREATE TABLE "public"."tokens" (
   "fee_per_swap" varchar(32),
   "process_date" timestamp(6),
   "bnb_to_eth_enabled" boolean,
-  "eth_to_bnb_enabled" boolean,
+  "eth_to_bnb_enabled" boolean
 )
 WITH (OIDS=FALSE);
 
