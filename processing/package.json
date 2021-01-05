@@ -11,7 +11,7 @@
   "dependencies": {
     "@binance-chain/javascript-sdk": "^2.13.5",
     "async": "^3.0.1",
-    "axios": "^0.18.1",
+    "axios": "^0.21.1",
     "ethereumjs-tx": "^2.0.0",
     "node-pty": "^0.8.1",
     "pg-promise": "^8.6.5",
