@@ -14,7 +14,7 @@
     "axios": "^0.18.1",
     "ethereumjs-tx": "^2.0.0",
     "node-pty": "^0.8.1",
-    "pg-promise": "^8.6.5",
+    "pg-promise": "^11.5.0",
     "web3": "1.0.0-beta.53"
   }
 }
